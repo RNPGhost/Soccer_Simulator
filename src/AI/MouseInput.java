@@ -7,6 +7,7 @@ import java.awt.event.MouseEvent;
 
 public class MouseInput extends MouseAdapter {
     MouseInputAI AI;
+    int lastButtonPressed;
 
     public void initialise(MouseInputAI AI) {
         this.AI = AI;
@@ -15,33 +16,19 @@ public class MouseInput extends MouseAdapter {
     }
 
     @Override
-    public void mouseClicked(MouseEvent e) {
-        if (e.getButton() == KeyBinding.setGoalPosition) {
+    public void mousePressed(MouseEvent e) {
+        lastButtonPressed = e.getButton();
+        if (lastButtonPressed == KeyBinding.setGoalPosition) {
             AI.setGoalPosition(e.getPoint());
-        } else if (e.getButton() == KeyBinding.selectPlayer) {
+        } else if (lastButtonPressed == KeyBinding.selectPlayer) {
             AI.selectPlayer(e.getPoint());
         }
     }
 
     @Override
-    public void mousePressed(MouseEvent e) {
-        if (e.getButton() == KeyBinding.setGoalPosition) {
-            AI.setGoalPosition(e.getPoint());
-        }
-    }
-
-    @Override
     public void mouseDragged(MouseEvent e) {
-        if (e.getButton() == KeyBinding.setGoalPosition) {
+        if (lastButtonPressed == KeyBinding.setGoalPosition) {
             AI.setGoalPosition(e.getPoint());
         }
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
     }
 }
