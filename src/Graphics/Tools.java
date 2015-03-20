@@ -100,8 +100,8 @@ public class Tools {
         } else {
             gl.glBegin(GL2.GL_LINE_LOOP);
         }
-        for (int i = 0; i < 360; i++) {
-            double iRads = i * Math.PI / 180;
+        for (int i = 0; i < 36; i++) {
+            double iRads = i * 10 * Math.PI / 180;
             float xComp = (float)(centreX + radius * Math.cos(iRads));
             float yComp = (float)(centreY + radius * Math.sin(iRads));
             gl.glVertex2f(cordConvertX(xComp),cordConvertY(yComp));
