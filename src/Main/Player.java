@@ -57,11 +57,11 @@ public class Player {
 
     private Vector2d calculateAcceleration(){
         // a = (direction to goal - velocity) * maxAcceleration / (|direction to goal - velocity|)
-        Vector2d direction = new Vector2d(goalPosition.x,goalPosition.y);
+        Vector2d direction = new Vector2d(goalPosition);
         direction.sub(position);
 
         // a = direction
-        Vector2d acceleration = direction;
+        Vector2d acceleration = new Vector2d(direction);
 
         // a = direction - velocity
         acceleration.sub(velocity);
@@ -94,7 +94,7 @@ public class Player {
     }
 
     public Player clone() {
-        return new Player(playerID, new Vector2d(position.x,position.y), new Vector2d(velocity.x,velocity.y),
-                new Vector2d(goalPosition.x,goalPosition.y));
+        return new Player(playerID, new Vector2d(position), new Vector2d(velocity),
+                new Vector2d(goalPosition));
     }
 }
