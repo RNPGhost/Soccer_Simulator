@@ -93,7 +93,9 @@ public class Player {
         return Pitch.insidePitch(goalPosition);
     }
 
-    public Player clone() {
+    @SuppressWarnings("CloneDoesntCallSuperClone")
+    @Override
+    public Player clone() throws CloneNotSupportedException {
         return new Player(playerID, new Vector2d(position), new Vector2d(velocity),
                 new Vector2d(goalPosition));
     }

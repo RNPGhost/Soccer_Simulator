@@ -17,7 +17,7 @@ public class Team {
         this.game = game;
         this.teamID = teamID;
         this.players = players;
-        for (int i = 0; i < 0; i++) {
+        for (int i = 0; i < players.size(); i++) {
             Player p = players.get(i);
             p.playerID = i; // maintain invariant players[i].playerID = i
             p.teamID = teamID;
@@ -33,7 +33,11 @@ public class Team {
     public List<Player> getCopyOfPlayers() {
         List<Player> playersCopy = new ArrayList<Player>();
         for (Player p : players) {
-            playersCopy.add(p.clone());
+            try {
+                playersCopy.add(p.clone());
+            } catch (CloneNotSupportedException e) {
+                e.printStackTrace();
+            }
         }
         return playersCopy;
     }
@@ -54,7 +58,7 @@ public class Team {
     public boolean setPlayerGoalPosition(int playerID, Vector2d position) {
         assert(isValidPlayerID(playerID));
         return getPlayer(playerID).setGoalPosition(position);
-    };
+    }
 
     public boolean kickBall(int playerID, Vector2d direction) {
         assert(isValidPlayerID(playerID));
