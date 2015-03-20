@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="JOGL">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../jogl-win32/jogl-win32" />
+    </CLASSES>
+    <JAVADOC />
+    <NATIVE>
+      <root url="file://$PROJECT_DIR$/../jogl-win32/jogl-win32" />
+    </NATIVE>
+    <SOURCES />
+    <jarDirectory url="file://$PROJECT_DIR$/../jogl-win32/jogl-win32" recursive="false" />
+  </library>
+</component>
