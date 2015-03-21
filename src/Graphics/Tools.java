@@ -101,7 +101,7 @@ public class Tools {
             gl.glBegin(GL2.GL_LINE_LOOP);
         }
         for (int i = 0; i < 36; i++) {
-            double iRads = i * 10 * Math.PI / 180;
+            double iRads = i * Math.PI / 18;
             float xComp = (float)(centreX + radius * Math.cos(iRads));
             float yComp = (float)(centreY + radius * Math.sin(iRads));
             gl.glVertex2f(cordConvertX(xComp),cordConvertY(yComp));

@@ -179,16 +179,25 @@ public class PitchDrawingFrame implements GLEventListener {
         Color team1Colour = Color.blue;
         Color team2Colour = Color.red;
 
+        // selection colour
+        Color selectionColour = new Color(232, 193, 11);
+
         // draw players on team 1
         for (Player p : players1) {
             Vector2d position = p.getPosition();
             Tools.drawFilledCircle(position.x,position.y,playerRadius,team1Colour);
+            if (p.selected) {
+                Tools.drawCircle(position.x,position.y,playerRadius,selectionColour);
+            }
         }
 
         // draw players on team 2
         for (Player p : players2) {
             Vector2d position = p.getPosition();
             Tools.drawFilledCircle(position.x,position.y,playerRadius,team2Colour);
+            if (p.selected) {
+                Tools.drawCircle(position.x,position.y,playerRadius,selectionColour);
+            }
         }
     }
 

@@ -96,7 +96,9 @@ public class Player {
     @SuppressWarnings("CloneDoesntCallSuperClone")
     @Override
     public Player clone() throws CloneNotSupportedException {
-        return new Player(playerID, new Vector2d(position), new Vector2d(velocity),
+        Player p =  new Player(playerID, new Vector2d(position), new Vector2d(velocity),
                 new Vector2d(goalPosition));
+        p.selected = selected;
+        return p;
     }
 }
