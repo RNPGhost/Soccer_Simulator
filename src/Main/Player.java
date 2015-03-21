@@ -80,13 +80,8 @@ public class Player {
         return acceleration;
     }
 
-    public synchronized boolean setGoalPosition(Vector2d goalPosition) {
-        boolean insidePitch = validGoalPosition(goalPosition);
-        if (insidePitch) {
-            this.goalPosition = goalPosition;
-            return true;
-        }
-        return false;
+    public synchronized void setGoalPosition(Vector2d goalPosition) {
+        this.goalPosition = goalPosition;
     }
 
     private boolean validGoalPosition(Vector2d goalPosition) {

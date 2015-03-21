@@ -7,15 +7,17 @@ import java.util.List;
 public class Team {
     private Game game;
     private int teamID;
+    private boolean left;
     private int selectedPlayerID;
     private boolean playerSelected = false;
     public int getTeamID() { return teamID; }
 
     List<Player> players = new ArrayList<Player>();
 
-    public Team(Game game, int teamID, List<Player> players) {
+    public Team(Game game, int teamID, boolean left, List<Player> players) {
         this.game = game;
         this.teamID = teamID;
+        this.left = left;
         this.players = players;
         for (int i = 0; i < players.size(); i++) {
             Player p = players.get(i);
@@ -56,12 +58,18 @@ public class Team {
     }
 
     public boolean setPlayerGoalPosition(int playerID, Vector2d position) {
-        assert(isValidPlayerID(playerID));
-        return getPlayer(playerID).setGoalPosition(position);
+        if (!isValidPlayerID(playerID)) { return false; }
+        if (left) {
+            if (!Pitch.insideLeftPenaltyBox(position)) { return false; }
+        } else {
+            if (!Pitch.insideRightPenaltyBox(position)) { return false; }
+        }
+        getPlayer(playerID).setGoalPosition(position);
+        return true;
     }
 
     public boolean kickBall(int playerID, Vector2d direction) {
-        assert(isValidPlayerID(playerID));
+        if (!isValidPlayerID(playerID)) { return false; }
         Ball ball = game.getBall();
         return ball.kick(teamID,playerID,direction);
     }
