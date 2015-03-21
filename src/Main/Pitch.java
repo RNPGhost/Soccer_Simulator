@@ -40,6 +40,28 @@ public class Pitch{
                 p.y <= Tools.centreY + height/2);
     }
 
+    public static boolean insideLeftPenaltyBox(Vector2d p) {
+        return insidePenaltyBox(true,p);
+    }
+
+    public static boolean insideRightPenaltyBox(Vector2d p) {
+        return insidePenaltyBox(false,p);
+    }
+
+    private static boolean insidePenaltyBox(boolean left, Vector2d p) {
+        Boolean correctY = (p.y >= Tools.centreY - pBoxWidth/2 &&
+                            p.y <= Tools.centreY + pBoxWidth/2);
+        Boolean correctXLeft = (p.x >= Tools.centreX - width/2 &&
+                                p.x <= Tools.centreX - width/2 + pBoxLength);
+        Boolean correctXRight = (p.x >= Tools.centreX + width/2 - pBoxWidth &&
+                                 p.x <= Tools.centreX + width/2);
+        if (left) {
+            return (correctY && correctXLeft);
+        } else {
+            return (correctY && correctXRight);
+        }
+    }
+
 
     private Team team1;
     private Team team2;
