@@ -59,10 +59,14 @@ public class Team {
 
     public boolean setPlayerGoalPosition(int playerID, Vector2d position) {
         if (!isValidPlayerID(playerID)) { return false; }
-        if (left) {
-            if (!Pitch.insideLeftPenaltyBox(position)) { return false; }
+        if (getPlayer(playerID) instanceof Goalkeeper) {
+            if (left) {
+                if (!Pitch.insideLeftPenaltyBox(position)) { return false; }
+            } else {
+                if (!Pitch.insideRightPenaltyBox(position)) { return false; }
+            }
         } else {
-            if (!Pitch.insideRightPenaltyBox(position)) { return false; }
+            if (!Pitch.insidePitch(position)) { return false; }
         }
         getPlayer(playerID).setGoalPosition(position);
         return true;
