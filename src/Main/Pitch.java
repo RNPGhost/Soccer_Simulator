@@ -69,6 +69,7 @@ public class Pitch{
 
     public Pitch(Ball ball, Team team1, Team team2) {
         this.ball = ball;
+        ball.pitch = this;
         this.team1 = team1;
         this.team2 = team2;
     }
@@ -80,5 +81,12 @@ public class Pitch{
         assert(team1.getTeamID() == teamID || team2.getTeamID() == teamID);
         if (team1.getTeamID() == teamID) { return team1.getCopyOfPlayers(); }
         return team2.getCopyOfPlayers();
+    }
+
+    public void update(int deltaTime) {
+        team1.updatePlayers(deltaTime);
+        team2.updatePlayers(deltaTime);
+        ball.update(deltaTime);
+        ball.updatePossession();
     }
 }

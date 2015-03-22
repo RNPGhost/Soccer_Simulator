@@ -12,8 +12,8 @@ import java.util.TimerTask;
 
 public class Game {
     private Pitch pitch;
-    private Team team1;
-    private Team team2;
+    private Team team1; // may not be necessary to store teams
+    private Team team2; // may not be necessary to store teams
     private Ball ball;
 
     public static void main(String[] args) {
@@ -27,7 +27,7 @@ public class Game {
         team2 = new Team(this,1,false,new ArrayList<Player>());
 
         // create a ball
-        ball = new Ball(new Vector2d(200,0));
+        ball = new Ball(new Vector2d(200,0),new Vector2d(0,0));
 
         // create a pitch to play on
         pitch = new Pitch(ball,team1,team2);
@@ -84,8 +84,7 @@ public class Game {
             this.period = period;
         }
         public void run() {
-            team1.updatePlayers(period);
-            team2.updatePlayers(period);
+            pitch.update(period);
         }
     }
 }

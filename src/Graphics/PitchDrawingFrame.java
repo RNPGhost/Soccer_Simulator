@@ -176,7 +176,7 @@ public class PitchDrawingFrame implements GLEventListener {
         Color team2Colour = Color.red;
 
         // selection colour
-        Color selectionColour = new Color(232, 193, 11);
+        Color selectionColour = new Color(190, 160, 10);
 
         // draw players on team 1
         for (Player p : players1) {
