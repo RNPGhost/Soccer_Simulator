@@ -35,7 +35,7 @@ public class Player {
             // calculate the change in velocity over deltaTime
         acceleration.scale(deltaTime / 1000f);
             // add the difference in velocity to the current velocity
-        Vector2d newVelocity = new Vector2d(velocity.x,velocity.y);
+        Vector2d newVelocity = new Vector2d(velocity);
         newVelocity.add(acceleration);
             // if no acceleration, then we are at the goal
         if (acceleration.length() == 0) {
@@ -50,7 +50,7 @@ public class Player {
         }
 
         // apply velocity to position
-        Vector2d distanceTravelled = new Vector2d(velocity.x,velocity.y);
+        Vector2d distanceTravelled = new Vector2d(velocity);
         distanceTravelled.scale(deltaTime/1000f);
         position.add(distanceTravelled);
     }

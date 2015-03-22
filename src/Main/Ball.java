@@ -40,7 +40,23 @@ public class Ball {
 
     public synchronized void update(int deltaTime) {
         if (!inPossession) {
-            // update velocity and position of ball
+            // calculate acceleration = -v/2
+            Vector2d acceleration = new Vector2d(velocity);
+            acceleration.scale(-1/2f);
+
+            // apply acceleration to velocity
+            acceleration.scale(deltaTime / 1000f);
+            velocity.add(acceleration);
+            if (velocity.length() <= 0.1) {
+                velocity = new Vector2d(0,0);
+            }
+
+            // apply velocity to position
+            if (velocity.length() > 0.1) {
+                Vector2d distanceTravelled = new Vector2d(velocity);
+                distanceTravelled.scale(deltaTime / 1000f);
+                position.add(distanceTravelled);
+            }
         }
     }
 
