@@ -23,8 +23,8 @@ public class Game {
 
     private void initialize() {
         // create 2 teams to play with
-        team1 = new Team(this,0,createPlayers());
-        team2 = new Team(this,1,new ArrayList<Player>());
+        team1 = new Team(this,0,true,createPlayers());
+        team2 = new Team(this,1,false,new ArrayList<Player>());
 
         // create a ball
         ball = new Ball(new TeamPlayerPair(team1.getTeamID(),0));
