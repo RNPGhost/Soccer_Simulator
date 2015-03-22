@@ -1,8 +1,6 @@
 package Graphics;
 
-import Main.Game;
-import Main.Pitch;
-import Main.Player;
+import Main.*;
 
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
@@ -56,9 +54,6 @@ public class PitchDrawingFrame implements GLEventListener {
     }
 
     private void drawPitch() {
-        // get the pitch
-        Pitch pitch = game.getPitch();
-
         // get the centre canvas coordinates
         double centreX = Tools.centreX;
         double centreY = Tools.centreY;
@@ -167,6 +162,7 @@ public class PitchDrawingFrame implements GLEventListener {
     private void drawPlayers(){
         // get the pitch
         Pitch pitch = game.getPitch();
+        Ball ball = game.getBall().copy();
 
         // get players from the pitch
         List<Player> players1 = pitch.getCopyOfPlayers(pitch.getTeam1ID());
@@ -189,6 +185,8 @@ public class PitchDrawingFrame implements GLEventListener {
             if (p.selected) {
                 Tools.drawCircle(position.x,position.y,playerRadius,selectionColour);
             }
+            // draw ball if in possession
+            drawBallInPossession(ball,pitch.getTeam1ID(),p,position,playerRadius);
         }
 
         // draw players on team 2
@@ -197,6 +195,31 @@ public class PitchDrawingFrame implements GLEventListener {
             Tools.drawFilledCircle(position.x,position.y,playerRadius,team2Colour);
             if (p.selected) {
                 Tools.drawCircle(position.x,position.y,playerRadius,selectionColour);
+            }
+            // draw ball if in possession// draw ball if in possession
+            drawBallInPossession(ball,pitch.getTeam2ID(),p,position,playerRadius);
+        }
+
+        // set ball colour
+        Color ballColour = Color.white;
+
+        // set ball radius
+        double ballRadius = 2.5;
+
+        // draw ball if not in possession
+        if (!ball.isInPossession()) {
+            Vector2d ballPosition = ball.getPosition();
+            Tools.drawFilledCircle(ballPosition.x,ballPosition.y,ballRadius,ballColour);
+        }
+    }
+
+    private void drawBallInPossession(Ball ball, int teamID, Player p, Vector2d position, double playerRadius) {
+        Color possessionColour = Color.white;
+        if (ball.isInPossession()) {
+            if (ball.getPossessorTeamID() == teamID) {
+                if (ball.getPossessorPlayerID() == p.playerID) {
+                    Tools.drawCircle(position.x,position.y,playerRadius+2,possessionColour);
+                }
             }
         }
     }
