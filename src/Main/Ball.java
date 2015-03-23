@@ -1,6 +1,7 @@
 package Main;
 
 import javax.vecmath.Vector2d;
+import java.util.*;
 
 public class Ball {
     private int possessorTeamID;
@@ -10,6 +11,8 @@ public class Ball {
     private Vector2d velocity;
     public Pitch pitch;
     private double maxVelocity = 300;
+    private Map<Integer, List<Integer>> illegalPossessors = new HashMap<Integer, List<Integer>>();
+    private boolean firstPossessionCheck = true;
 
     public Ball(int teamID, int playerID) {
         inPossession = true;
@@ -21,6 +24,11 @@ public class Ball {
         inPossession = false;
         this.position = position;
         this.velocity = velocity;
+    }
+
+    private void initialiseIllegalPossessors() {
+        illegalPossessors.put(pitch.getTeam1ID(),new LinkedList<Integer>());
+        illegalPossessors.put(pitch.getTeam2ID(),new LinkedList<Integer>());
     }
 
     public boolean isInPossession() { return inPossession; }
@@ -62,6 +70,10 @@ public class Ball {
     }
 
     public synchronized void updatePossession() {
+        if (firstPossessionCheck) {
+            initialiseIllegalPossessors();
+            firstPossessionCheck = false;
+        }
         for (Player p : pitch.getCopyOfPlayers(pitch.getTeam1ID())) {
             takePossession(p);
         }
@@ -71,9 +83,13 @@ public class Ball {
     }
 
     private void takePossession(Player p) {
-        // if ball isn't in possession, or other team has ball, and player is close enough, take possession
-        // update possessorTeamID and possessorPlayerID
+        // make sure player has not taken possession of the ball recently
+        if (illegalPossessors.get(p.teamID).contains(p.playerID)) { return; }
+
+        // set required distance to take possession
         Double requiredDistance = 5.0; // the centre of the player must be within 0.5m of the centre of the ball
+
+        // calculate distance to ball
         Vector2d distance;
         if (inPossession) {
             distance = getPossessorPosition();
@@ -81,11 +97,29 @@ public class Ball {
             distance = new Vector2d(position);
         }
         distance.sub(p.getPosition());
+
+        // if the player is close enough, take possession
         if (distance.length() <= requiredDistance) {
+            if (inPossession) {
+                illegalPossessors.get(possessorTeamID).add(possessorPlayerID);
+                Timer recentlyTackled = new Timer();
+                recentlyTackled.schedule(new RecentlyTackledTask(possessorTeamID,possessorPlayerID),2000);
+            }
             possessorTeamID = p.teamID;
             possessorPlayerID = p.playerID;
             inPossession = true;
-            // at some point, must make sure that this player has not possessed the ball in the last 2 seconds
+        }
+    }
+
+    class RecentlyTackledTask extends TimerTask {
+        private int teamID;
+        private int playerID;
+        public RecentlyTackledTask(int teamID, int playerID) {
+            this.teamID = teamID;
+            this.playerID = playerID;
+        }
+        public void run() {
+            illegalPossessors.get(teamID).remove(playerID);
         }
     }
 
