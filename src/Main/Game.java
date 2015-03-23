@@ -12,8 +12,8 @@ import java.util.TimerTask;
 
 public class Game {
     private Pitch pitch;
-    private Team team1; // may not be necessary to store teams
-    private Team team2; // may not be necessary to store teams
+    private Team team1;
+    private Team team2;
     private Ball ball;
 
     public static void main(String[] args) {
@@ -69,12 +69,10 @@ public class Game {
     }
 
     public Pitch getPitch() {
-        assert(pitch != null);
         return pitch;
     }
 
     public Ball getBall() {
-        assert(ball != null);
         return ball;
     }
 

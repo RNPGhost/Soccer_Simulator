@@ -86,6 +86,9 @@ public class Ball {
         // make sure player has not taken possession of the ball recently
         if (illegalPossessors.get(p.teamID).contains(p.playerID)) { return; }
 
+        // make sure that the player isn't trying to tackle a team mate
+        if (inPossession && possessorTeamID == p.teamID) { return; }
+
         // set required distance to take possession
         Double requiredDistance = 5.0; // the centre of the player must be within 0.5m of the centre of the ball
 
@@ -101,14 +104,24 @@ public class Ball {
         // if the player is close enough, take possession
         if (distance.length() <= requiredDistance) {
             if (inPossession) {
-                illegalPossessors.get(possessorTeamID).add(possessorPlayerID);
-                Timer recentlyTackled = new Timer();
-                recentlyTackled.schedule(new RecentlyTackledTask(possessorTeamID,possessorPlayerID),2000);
+                // tackle has been made, so prevent current possessor from retrieving the ball immediately
+                startPossessionGapTimer();
             }
             possessorTeamID = p.teamID;
             possessorPlayerID = p.playerID;
             inPossession = true;
         }
+    }
+
+    private void startPossessionGapTimer() {
+        // set required time since last possession
+        int requiredPossessionGap = 500;
+
+        // create timer and schedule end of gap
+        illegalPossessors.get(possessorTeamID).add(possessorPlayerID);
+        Timer recentlyTackled = new Timer();
+        recentlyTackled.schedule(new RecentlyTackledTask(possessorTeamID,possessorPlayerID),
+                requiredPossessionGap);
     }
 
     class RecentlyTackledTask extends TimerTask {
@@ -142,6 +155,9 @@ public class Ball {
             velocity.normalize();
             velocity.scale(maxVelocity);
         }
+
+        // prevent current possessor from retrieving the ball immediately
+        startPossessionGapTimer();
 
         // update that ball is no longer in possession
         inPossession = false;
