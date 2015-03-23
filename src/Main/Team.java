@@ -74,7 +74,7 @@ public class Team {
 
     public boolean kickBall(Vector2d direction) {
         Ball ball = game.getBall();
-        return ball.kick(teamID,direction);
+        return ball.kick(teamID,getCopyOfPlayers(),direction);
     }
 
     public void selectPlayer(int playerID) {

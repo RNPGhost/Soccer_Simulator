@@ -69,7 +69,6 @@ public class Pitch{
 
     public Pitch(Ball ball, Team team1, Team team2) {
         this.ball = ball;
-        ball.pitch = this;
         this.team1 = team1;
         this.team2 = team2;
     }
@@ -87,6 +86,6 @@ public class Pitch{
         team1.updatePlayers(deltaTime);
         team2.updatePlayers(deltaTime);
         ball.update(deltaTime);
-        ball.updatePossession();
+        ball.updatePossession(team1.getCopyOfPlayers(),team2.getCopyOfPlayers());
     }
 }

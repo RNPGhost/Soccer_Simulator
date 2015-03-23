@@ -27,7 +27,7 @@ public class Game {
         team2 = new Team(this,1,false,new ArrayList<Player>());
 
         // create a ball
-        ball = new Ball(new Vector2d(200,0),new Vector2d(0,0));
+        ball = new Ball(new Vector2d(200,0),new Vector2d(0,0),team1.getTeamID(),team2.getTeamID());
 
         // create a pitch to play on
         pitch = new Pitch(ball,team1,team2);
