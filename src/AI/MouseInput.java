@@ -31,4 +31,11 @@ public class MouseInput extends MouseAdapter {
             AI.setGoalPosition(e.getPoint());
         }
     }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        if (e.getButton() == KeyBinding.kickBall) {
+            AI.kickBall(e.getPoint());
+        }
+    }
 }

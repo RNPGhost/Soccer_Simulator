@@ -72,10 +72,9 @@ public class Team {
         return true;
     }
 
-    public boolean kickBall(int playerID, Vector2d direction) {
-        if (!isValidPlayerID(playerID)) { return false; }
+    public boolean kickBall(Vector2d direction) {
         Ball ball = game.getBall();
-        return ball.kick(teamID,playerID,direction);
+        return ball.kick(teamID,direction);
     }
 
     public void selectPlayer(int playerID) {

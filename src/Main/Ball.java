@@ -9,6 +9,7 @@ public class Ball {
     private Vector2d position;
     private Vector2d velocity;
     public Pitch pitch;
+    private double maxVelocity = 300;
 
     public Ball(int teamID, int playerID) {
         inPossession = true;
@@ -40,9 +41,9 @@ public class Ball {
 
     public synchronized void update(int deltaTime) {
         if (!inPossession) {
-            // calculate acceleration = -v/2
+            // calculate acceleration = -v/3
             Vector2d acceleration = new Vector2d(velocity);
-            acceleration.scale(-1/2f);
+            acceleration.scale(-1 / 3f);
 
             // apply acceleration to velocity
             acceleration.scale(deltaTime / 1000f);
@@ -96,8 +97,22 @@ public class Ball {
     }
 
 
-    public synchronized boolean kick(int teamID, int playerID, Vector2d direction) {
-        return false;
+    public synchronized boolean kick(int teamID, Vector2d direction) {
+        if (!(inPossession && possessorTeamID == teamID)) { return false; }
+        // set position of ball
+        position = getPossessorPosition();
+
+        // set velocity of ball
+        velocity = new Vector2d(direction);
+        if (velocity.length() > maxVelocity) {
+            velocity.normalize();
+            velocity.scale(maxVelocity);
+        }
+
+        // update that ball is no longer in possession
+        inPossession = false;
+
+        return true;
     }
 
     public synchronized Ball copy() {
