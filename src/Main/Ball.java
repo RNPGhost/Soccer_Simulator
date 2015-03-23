@@ -6,37 +6,29 @@ import java.util.*;
 public class Ball {
     private int possessorTeamID;
     private int possessorPlayerID;
-    private int team1ID;
-    private int team2ID;
     private boolean inPossession;
     private Vector2d position;
     private Vector2d velocity;
+    public Pitch pitch;
     private double maxVelocity = 300;
     private Map<Integer, List<Integer>> illegalPossessors = new HashMap<Integer, List<Integer>>();
+    private boolean firstPossessionCheck = true;
 
-    public Ball(int teamID, int playerID, int  team1ID, int team2ID) {
+    public Ball(int teamID, int playerID) {
         inPossession = true;
         possessorTeamID = teamID;
         possessorPlayerID = playerID;
-        initialise(team1ID, team2ID);
     }
 
-    public Ball(Vector2d position, Vector2d velocity, int team1ID, int team2ID) {
+    public Ball(Vector2d position, Vector2d velocity) {
         inPossession = false;
         this.position = position;
         this.velocity = velocity;
-        initialise(team1ID,team2ID);
-    }
-
-    private void initialise(int team1ID, int team2ID) {
-        this.team1ID = team1ID;
-        this.team2ID = team2ID;
-        initialiseIllegalPossessors();
     }
 
     private void initialiseIllegalPossessors() {
-        illegalPossessors.put(team1ID,new LinkedList<Integer>());
-        illegalPossessors.put(team2ID,new LinkedList<Integer>());
+        illegalPossessors.put(pitch.getTeam1ID(),new LinkedList<Integer>());
+        illegalPossessors.put(pitch.getTeam2ID(),new LinkedList<Integer>());
     }
 
     public boolean isInPossession() { return inPossession; }
@@ -77,29 +69,20 @@ public class Ball {
         }
     }
 
-    public synchronized void updatePossession(List<Player> players1, List<Player> players2) {
-        Vector2d possessorPosition;
-        if (isPossessingTeam(players1)) {
-            possessorPosition = getPossessorPosition(players1);
-        } else {
-            possessorPosition = getPossessorPosition(players2);
+    public synchronized void updatePossession() {
+        if (firstPossessionCheck) {
+            initialiseIllegalPossessors();
+            firstPossessionCheck = false;
         }
-        for (Player p : players1) {
-            takePossession(p,possessorPosition);
+        for (Player p : pitch.getCopyOfPlayers(pitch.getTeam1ID())) {
+            takePossession(p);
         }
-        for (Player p : players2) {
-            takePossession(p,possessorPosition);
+        for (Player p : pitch.getCopyOfPlayers(pitch.getTeam2ID())) {
+            takePossession(p);
         }
     }
 
-    private boolean isPossessingTeam(List<Player> players) {
-        for (Player p : players) {
-            return (p.teamID == possessorTeamID);
-        }
-        return false;
-    }
-
-    private void takePossession(Player p, Vector2d possessorPosition) {
+    private void takePossession(Player p) {
         // make sure player has not taken possession of the ball recently
         if (illegalPossessors.get(p.teamID).contains(p.playerID)) { return; }
 
@@ -107,12 +90,12 @@ public class Ball {
         if (inPossession && possessorTeamID == p.teamID) { return; }
 
         // set required distance to take possession
-        Double requiredDistance = 8.0; // the centre of the player must be within 0.5m of the centre of the ball
+        Double requiredDistance = 5.0; // the centre of the player must be within 0.5m of the centre of the ball
 
         // calculate distance to ball
         Vector2d distance;
         if (inPossession) {
-            distance = possessorPosition;
+            distance = getPossessorPosition();
         } else {
             distance = new Vector2d(position);
         }
@@ -153,18 +136,18 @@ public class Ball {
         }
     }
 
-    private Vector2d getPossessorPosition(List<Player> players) {
-        for (Player p : players) {
+    private Vector2d getPossessorPosition() {
+        for (Player p : pitch.getCopyOfPlayers(possessorTeamID)) {
             if (p.playerID == possessorPlayerID) { return p.getPosition(); }
         }
         return null;
     }
 
 
-    public synchronized boolean kick(int teamID, List<Player> players, Vector2d direction) {
+    public synchronized boolean kick(int teamID, Vector2d direction) {
         if (!(inPossession && possessorTeamID == teamID)) { return false; }
         // set position of ball
-        position = getPossessorPosition(players);
+        position = getPossessorPosition();
 
         // set velocity of ball
         velocity = new Vector2d(direction);
@@ -184,9 +167,9 @@ public class Ball {
 
     public synchronized Ball copy() {
         if (inPossession) {
-            return new Ball(possessorTeamID,possessorPlayerID,team1ID,team2ID);
+            return new Ball(possessorTeamID,possessorPlayerID);
         } else {
-            return new Ball(new Vector2d(position),new Vector2d(velocity),team1ID,team2ID);
+            return new Ball(new Vector2d(position),new Vector2d(velocity));
         }
     }
 }
