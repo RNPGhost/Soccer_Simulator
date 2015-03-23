@@ -83,6 +83,9 @@ public class Game {
         }
         public void run() {
             pitch.update(period);
+            if (!Pitch.insidePitch(ball.getPosition())) {
+                // check if goal or throw in or goal kick or corner
+            }
         }
     }
 }

@@ -90,7 +90,7 @@ public class Ball {
         if (inPossession && possessorTeamID == p.teamID) { return; }
 
         // set required distance to take possession
-        Double requiredDistance = 5.0; // the centre of the player must be within 0.5m of the centre of the ball
+        Double requiredDistance = 8.0; // the centre of the player must be within 0.5m of the centre of the ball
 
         // calculate distance to ball
         Vector2d distance;
@@ -142,7 +142,6 @@ public class Ball {
         }
         return null;
     }
-
 
     public synchronized boolean kick(int teamID, Vector2d direction) {
         if (!(inPossession && possessorTeamID == teamID)) { return false; }
