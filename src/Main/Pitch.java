@@ -113,6 +113,10 @@ public class Pitch{
     private static boolean isValidIntersection(Vector2d position, Vector2d velocity, Vector2d p1, Vector2d p2) {
         Vector2d gradient = new Vector2d(p2);
         gradient.sub(p1);
+
+        // if the two lines are parallel
+        if (velocity.x * gradient.y == gradient.x * velocity.y) { return false; }
+
         Vector2d intersection = getIntersectionPoint(position,velocity,p1,gradient);
         return (intersection.x >= Math.min(p1.x, p2.x) &&
                 intersection.x <= Math.max(p1.x, p2.x) &&
@@ -128,7 +132,7 @@ public class Pitch{
         if (g1.x * g2.y == g2.x * g1.y) { return null; }
 
         // otherwise, find t
-        double t = ( g2.x * (p1.y + p2.y) + g2.y * (p2.x - p1.x) ) / ( g1.x * g2.y - g2.x * g1.y );
+        double t = ( g2.x * (p1.y - p2.y) + g2.y * (p2.x - p1.x) ) / ( g1.x * g2.y - g2.x * g1.y );
 
         // plug t into the equation for l1
         return new Vector2d(p1.x + t * g1.x,p1.y + t * g1.y);

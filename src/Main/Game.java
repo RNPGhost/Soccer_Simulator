@@ -27,7 +27,7 @@ public class Game {
         team2 = new Team(this,1,false,new ArrayList<Player>());
 
         // create a ball
-        ball = new Ball(new Vector2d(200,0),new Vector2d(0,0));
+        ball = new Ball(team1.getTeamID(),0);
 
         // create a pitch to play on
         pitch = new Pitch(ball,team1,team2);
@@ -83,7 +83,11 @@ public class Game {
         }
         public void run() {
             pitch.update(period);
-            if (!Pitch.insidePitch(ball.getPosition())) {
+            // lots of bugs
+            // doesn't print anything when kicked out of the top
+            // flips between left and right when kicked out of the side
+            if (!(ball.isInPossession()
+                    || Pitch.insidePitch(ball.getPosition()))) {
                 PitchLine line = Pitch.findIntersectionLine(ball.getPosition(), ball.getVelocity());
                 if (line == PitchLine.TOP_SIDELINE
                         || line == PitchLine.BOTTOM_SIDELINE) {
