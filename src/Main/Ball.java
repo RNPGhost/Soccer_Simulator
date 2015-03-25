@@ -44,8 +44,10 @@ public class Ball {
     }
 
     public synchronized Vector2d getPosition() {
-        return position;
+        return new Vector2d(position);
     }
+
+    public synchronized Vector2d getVelocity() { return new Vector2d(velocity); }
 
     public synchronized void update(int deltaTime) {
         if (!inPossession) {

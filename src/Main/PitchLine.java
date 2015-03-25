@@ -1,0 +1,5 @@
+package Main;
+
+public enum PitchLine {
+    TOP_SIDELINE, BOTTOM_SIDELINE, LEFT_SIDELINE, RIGHT_SIDELINE, LEFT_GOAL, RIGHT_GOAL
+}

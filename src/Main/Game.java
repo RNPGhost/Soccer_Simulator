@@ -16,7 +16,7 @@ public class Game {
     private Team team2;
     private Ball ball;
 
-    public static void main(String[] args) {
+   public static void main(String[] args) {
         Game game = new Game();
         game.initialize();
     }
@@ -84,7 +84,37 @@ public class Game {
         public void run() {
             pitch.update(period);
             if (!Pitch.insidePitch(ball.getPosition())) {
-                // check if goal or throw in or goal kick or corner
+                PitchLine line = Pitch.findIntersectionLine(ball.getPosition(), ball.getVelocity());
+                if (line == PitchLine.TOP_SIDELINE
+                        || line == PitchLine.BOTTOM_SIDELINE) {
+                    System.out.println("Top or Bottom");
+                    // check who last possessed the ball
+                    // give it to the closest member of the opposing team
+                    // force that player to stay on the line
+                    // update the AI controlling that team
+                } else if (line == PitchLine.LEFT_SIDELINE) {
+                    System.out.println("Left");
+                    // check possession to see whether it's a corner or goal kick
+                    // if goal kick
+                        // give to goalkeeper and force him not to move
+                    // if corner
+                        // give to closest member of the opposing team and force him not to move
+                } else if (line == PitchLine.RIGHT_SIDELINE) {
+                    System.out.println("Right");
+                    // check possession to see whether it's a corner or goal kick
+                    // if goal kick
+                        // give to goalkeeper and force him not to move
+                    // if corner
+                        // give to closest member of the opposing team and force him not to move
+                } else if (line == PitchLine.LEFT_GOAL) {
+                    System.out.println("Left Goal");
+                    // goal to right team (team 2)
+                    // reset pitch
+                } else if (line == PitchLine.RIGHT_GOAL) {
+                    System.out.println("Right Goal");
+                    // goal to left team (team 1)
+                    // reset pitch
+                }
             }
         }
     }
