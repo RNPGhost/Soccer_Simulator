@@ -139,10 +139,7 @@ public class Ball {
     }
 
     private Vector2d getPossessorPosition() {
-        for (Player p : pitch.getCopyOfPlayers(possessorTeamID)) {
-            if (p.playerID == possessorPlayerID) { return p.getPosition(); }
-        }
-        return null;
+        return pitch.getPlayerPosition(possessorTeamID,possessorPlayerID);
     }
 
     public synchronized boolean kick(int teamID, Vector2d direction) {

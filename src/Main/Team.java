@@ -95,4 +95,8 @@ public class Team {
     public boolean isPlayerSelected() {
         return playerSelected;
     }
+
+    public Vector2d getPlayerPosition(int playerID) {
+        return players.get(playerID).getPosition();
+    }
 }

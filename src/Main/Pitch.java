@@ -196,4 +196,13 @@ public class Pitch{
         ball.updatePossession();
     }
 
+    public Vector2d getPlayerPosition(int teamID, int playerID) {
+        if (team1.getTeamID() == teamID) {
+            return team1.getPlayerPosition(playerID);
+        }
+        if (team2.getTeamID() == teamID) {
+            return team2.getPlayerPosition(playerID);
+        }
+        return null;
+    }
 }
