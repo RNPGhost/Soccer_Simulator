@@ -34,48 +34,16 @@ public class Pitch{
     final public static int centreCircleRad = 100;
 
     private void checkBallOutOfBounds() {
-        if (!ball.isInPossession()
-                && !Pitch.insidePitch(ball.getPosition())) {
-            PitchLine line = Pitch.findIntersectionLine(ball.getPosition(), ball.getVelocity());
-            if (line == PitchLine.TOP_SIDELINE
-                    || line == PitchLine.BOTTOM_SIDELINE) {
-                System.out.println("Top or Bottom");
-                if (team1.getTeamID() == ball.getPossessorTeamID()) {
-
-                } else {
-
-                }
-                // give it to the closest member of the opposing team
-                // force that player to stay on the line
-                // update the AI controlling that team
-            } else if (line == PitchLine.LEFT_SIDELINE) {
-                System.out.println("Left");
-                // check possession to see whether it's a corner or goal kick
-                // if goal kick
-                // give to goalkeeper and force him not to move
-                // if corner
-                // give to closest member of the opposing team and force him not to move
-            } else if (line == PitchLine.RIGHT_SIDELINE) {
-                System.out.println("Right");
-                // check possession to see whether it's a corner or goal kick
-                // if goal kick
-                // give to goalkeeper and force him not to move
-                // if corner
-                // give to closest member of the opposing team and force him not to move
-            } else if (line == PitchLine.LEFT_GOAL) {
-                System.out.println("Left Goal");
-                // goal to right team (team 2)
-                // reset pitch
-            } else if (line == PitchLine.RIGHT_GOAL) {
-                System.out.println("Right Goal");
-                // goal to left team (team 1)
-                // reset pitch
-            }
+        if (!ball.isInPossession() && !Pitch.insidePitch(ball.getPosition())) {
+            findIntersectionLine();
         }
     }
 
-    private static PitchLine findIntersectionLine(Vector2d position, Vector2d velocity) {
+    private void findIntersectionLine() {
+        Vector2d position = ball.getPosition();
+        Vector2d velocity = ball.getVelocity();
         PitchLine line = null;
+        Vector2d boundsIntersection = null;
         double distance = Double.POSITIVE_INFINITY;
 
         // find pitch corner coordinates
@@ -93,62 +61,105 @@ public class Pitch{
 
         // check if top sideline intersection is valid
         if (isValidIntersection(position,velocity,topLeftCorner,topRightCorner)) {
-            double newDistance = findDistance(position,
-                    getIntersectionPoint(position,velocity,topLeftCorner,topRightCorner));
+            Vector2d intersection = getIntersectionPoint(position,velocity,topLeftCorner,topRightCorner);
+            double newDistance = findDistance(position,intersection);
             if (newDistance < distance) {
                 line = PitchLine.TOP_SIDELINE;
+                boundsIntersection = intersection;
                 distance = newDistance;
             }
         }
         // check if bottom sideline intersection is valid
         if (isValidIntersection(position,velocity,bottomLeftCorner,bottomRightCorner)) {
-            double newDistance = findDistance(position,
-                    getIntersectionPoint(position,velocity,bottomLeftCorner,bottomRightCorner));
+            Vector2d intersection = getIntersectionPoint(position,velocity,bottomLeftCorner,bottomRightCorner);
+            double newDistance = findDistance(position,intersection);
             if (newDistance < distance) {
                 line = PitchLine.BOTTOM_SIDELINE;
+                boundsIntersection = intersection;
                 distance = newDistance;
             }
         }
         // check if left sideline intersection is valid
         if (isValidIntersection(position,velocity,topLeftCorner,topLeftGoal) ||
                 isValidIntersection(position,velocity,bottomLeftGoal,bottomLeftCorner)) {
-            double newDistance = findDistance(position,
-                    getIntersectionPoint(position,velocity,topLeftCorner,bottomLeftCorner));
+            Vector2d intersection = getIntersectionPoint(position,velocity,topLeftCorner,bottomLeftCorner);
+            double newDistance = findDistance(position,intersection);
             if (newDistance < distance) {
                 line = PitchLine.LEFT_SIDELINE;
+                boundsIntersection = intersection;
                 distance = newDistance;
             }
         }
         // check if the left goal intersection is valid
         else if (isValidIntersection(position,velocity,topLeftGoal,bottomLeftGoal)) {
-            double newDistance = findDistance(position,
-                    getIntersectionPoint(position,velocity,topLeftGoal,bottomLeftGoal));
+            Vector2d intersection = getIntersectionPoint(position,velocity,topLeftGoal,bottomLeftGoal);
+            double newDistance = findDistance(position,intersection);
             if (newDistance < distance) {
                 line = PitchLine.LEFT_GOAL;
+                boundsIntersection = intersection;
                 distance = newDistance;
             }
         }
         // check if the right sideline intersection is valid
         if (isValidIntersection(position,velocity,topRightCorner,topRightGoal) ||
                 isValidIntersection(position,velocity,bottomRightGoal,bottomRightCorner)) {
-            double newDistance = findDistance(position,
-                    getIntersectionPoint(position,velocity,topRightCorner,bottomRightCorner));
+            Vector2d intersection = getIntersectionPoint(position,velocity,topRightCorner,bottomRightCorner);
+            double newDistance = findDistance(position,intersection);
             if (newDistance < distance) {
                 line = PitchLine.RIGHT_SIDELINE;
+                boundsIntersection = intersection;
                 distance = newDistance;
             }
         }
         // check if the right goal intersection is valid
         else if (isValidIntersection(position,velocity,topRightGoal,bottomRightGoal)) {
-            double newDistance = findDistance(position,
-                    getIntersectionPoint(position,velocity,topRightGoal,bottomRightGoal));
+            Vector2d intersection = getIntersectionPoint(position,velocity,topRightGoal,bottomRightGoal);
+            double newDistance = findDistance(position,intersection);
             if (newDistance < distance) {
                 line = PitchLine.RIGHT_GOAL;
+                boundsIntersection = intersection;
                 distance = newDistance;
             }
         }
 
-        return line;
+        ballOutOfBounds(line, boundsIntersection);
+    }
+
+    private void ballOutOfBounds(PitchLine line, Vector2d intersection) {
+        if (line == PitchLine.TOP_SIDELINE
+                || line == PitchLine.BOTTOM_SIDELINE) {
+            System.out.println("Top or Bottom");
+            if (team1.getTeamID() == ball.getPossessorTeamID()) {
+
+            } else {
+
+            }
+            // give it to the closest member of the opposing team
+            // force that player to stay on the line
+            // update the AI controlling that team
+        } else if (line == PitchLine.LEFT_SIDELINE) {
+            System.out.println("Left");
+            // check possession to see whether it's a corner or goal kick
+            // if goal kick
+            // give to goalkeeper and force him not to move
+            // if corner
+            // give to closest member of the opposing team and force him not to move
+        } else if (line == PitchLine.RIGHT_SIDELINE) {
+            System.out.println("Right");
+            // check possession to see whether it's a corner or goal kick
+            // if goal kick
+            // give to goalkeeper and force him not to move
+            // if corner
+            // give to closest member of the opposing team and force him not to move
+        } else if (line == PitchLine.LEFT_GOAL) {
+            System.out.println("Left Goal");
+            // goal to right team (team 2)
+            // reset pitch
+        } else if (line == PitchLine.RIGHT_GOAL) {
+            System.out.println("Right Goal");
+            // goal to left team (team 1)
+            // reset pitch
+        }
     }
 
     private static boolean isValidIntersection(Vector2d position, Vector2d velocity, Vector2d p1, Vector2d p2) {
