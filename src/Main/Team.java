@@ -5,7 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Team {
-    private Game game;
+    private Pitch pitch;
+    private Ball ball;
     private int teamID;
     private int selectedPlayerID;
     private boolean playerSelected = false;
@@ -13,8 +14,9 @@ public class Team {
 
     List<Player> players = new ArrayList<Player>();
 
-    public Team(Game game, int teamID, List<Player> players) {
-        this.game = game;
+    public Team(Pitch pitch, Ball ball, int teamID, List<Player> players) {
+        this.pitch = pitch;
+        this.ball = ball;
         this.teamID = teamID;
         this.players = players;
         for (int i = 0; i < players.size(); i++) {
@@ -42,9 +44,7 @@ public class Team {
         return playersCopy;
     }
 
-    public Pitch getPitch() {
-        return game.getPitch();
-    }
+    public Pitch getPitch() { return pitch; }
 
     private boolean isValidPlayerID(int playerID) {
         return (0 <= playerID && playerID < players.size());
@@ -58,7 +58,7 @@ public class Team {
     public boolean setPlayerGoalPosition(int playerID, Vector2d position) {
         if (!isValidPlayerID(playerID)) { return false; }
         if (getPlayer(playerID) instanceof Goalkeeper) {
-            if (game.getPitch().getTeam1ID() == teamID) {
+            if (pitch.getTeam1ID() == teamID) {
                 if (!Pitch.insideLeftPenaltyBox(position)) { return false; }
             } else {
                 if (!Pitch.insideRightPenaltyBox(position)) { return false; }
@@ -71,7 +71,6 @@ public class Team {
     }
 
     public boolean kickBall(Vector2d direction) {
-        Ball ball = game.getBall();
         return ball.kick(teamID,direction);
     }
 

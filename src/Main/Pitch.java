@@ -1,8 +1,10 @@
 package Main;
 
+import AI.AI;
 import Graphics.Tools;
 
 import javax.vecmath.Vector2d;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Pitch{
@@ -225,15 +227,34 @@ public class Pitch{
         }
     }
 
-    private Team team1; // team 1 is on the left of the pitch
-    private Team team2; // team 2 is on the right of the pitch
     private Ball ball;
+    private Team team1;
+    private Team team2;
 
-    public Pitch(Ball ball, Team team1, Team team2) {
+    public Pitch(AI team1AI, AI team2AI, Ball ball) {
         this.ball = ball;
+
+        // set the pitch for the ball
         ball.pitch = this;
-        this.team1 = team1;
-        this.team2 = team2;
+
+        // create teams
+        team1 = new Team(this,ball,0,createPlayers());
+        team2 = new Team(this,ball,1,new ArrayList<Player>());
+
+        // give teams to AI
+        team1AI.updateTeam(team1);
+        team2AI.updateTeam(team2);
+    }
+
+    private List<Player> createPlayers() {
+        int playerID = 0;
+        Vector2d position = new Vector2d(0,0);
+        Vector2d velocity = new Vector2d(0,0);
+        Vector2d goalPosition = new Vector2d(0,0);
+        Player player = new Player(playerID,position,velocity,goalPosition);
+        List<Player> players = new ArrayList<Player>();
+        players.add(player);
+        return players;
     }
 
     public int getTeam1ID() { return team1.getTeamID(); }

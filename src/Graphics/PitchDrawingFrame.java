@@ -11,10 +11,12 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class PitchDrawingFrame implements GLEventListener {
-    private Game game;
+    private Pitch pitch;
+    private Ball ball;
 
-    public PitchDrawingFrame(Game game) {
-        this.game = game;
+    public void initialise(Pitch pitch, Ball ball) {
+        this.pitch = pitch;
+        this.ball = ball;
     }
 
     public void init(GLAutoDrawable glAutoDrawable) {
@@ -160,10 +162,6 @@ public class PitchDrawingFrame implements GLEventListener {
     }
 
     private void drawPlayers(){
-        // get the pitch
-        Pitch pitch = game.getPitch();
-        Ball ball = game.getBall().copy();
-
         // get players from the pitch
         List<Player> players1 = pitch.getCopyOfPlayers(pitch.getTeam1ID());
         List<Player> players2 = pitch.getCopyOfPlayers(pitch.getTeam2ID());
