@@ -150,7 +150,7 @@ public class Ball {
     }
 
     private Vector2d getPossessorPosition() {
-        return pitch.getPlayerPosition(possessorTeamID,possessorPlayerID);
+        return pitch.getBallPossessorPosition();
     }
 
     public synchronized boolean kick(int teamID, Vector2d direction) {

@@ -293,6 +293,17 @@ public class Pitch implements BallKickListener {
         checkBallOutOfBounds();
     }
 
+    public boolean ballIsInPossession() {
+        return ball.isInPossession();
+    }
+
+    public Vector2d getBallPossessorPosition() {
+        if (ball.isInPossession()) {
+            return getPlayerPosition(ball.getPossessorTeamID(),ball.getPossessorPlayerID());
+        }
+        return null;
+    }
+
     public Vector2d getPlayerPosition(int teamID, int playerID) {
         if (team1.getTeamID() == teamID) {
             return team1.getPlayerPosition(playerID);

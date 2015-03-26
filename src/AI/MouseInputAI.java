@@ -55,9 +55,11 @@ public class MouseInputAI implements AI {
     }
 
     public void kickBall(Point p) {
-        Vector2d direction = convertPointToVector(p);
-        direction.sub(getSelectedPlayerPosition());
-        team.kickBall(direction);
+        if (team.getPitch().ballIsInPossession()) {
+            Vector2d direction = convertPointToVector(p);
+            direction.sub(team.getPitch().getBallPossessorPosition());
+            team.kickBall(direction);
+        }
     }
 
     private Vector2d getSelectedPlayerPosition() {

@@ -22,12 +22,17 @@ public class MouseInput extends MouseAdapter {
             AI.setGoalPosition(e.getPoint());
         } else if (lastButtonPressed == KeyBinding.selectPlayer) {
             AI.selectPlayer(e.getPoint());
+        } else if (lastButtonPressed == KeyBinding.kickBall) {
+            AI.selectPlayer(e.getPoint());
+            AI.setGoalPosition(e.getPoint());
         }
     }
 
     @Override
     public void mouseDragged(MouseEvent e) {
         if (lastButtonPressed == KeyBinding.setGoalPosition) {
+            AI.setGoalPosition(e.getPoint());
+        } else if (lastButtonPressed == KeyBinding.kickBall) {
             AI.setGoalPosition(e.getPoint());
         }
     }
