@@ -83,43 +83,7 @@ public class Game {
         }
         public void run() {
             pitch.update(period);
-            // lots of bugs
-            // doesn't print anything when kicked out of the top
-            // flips between left and right when kicked out of the side
-            if (!(ball.isInPossession()
-                    || Pitch.insidePitch(ball.getPosition()))) {
-                PitchLine line = Pitch.findIntersectionLine(ball.getPosition(), ball.getVelocity());
-                if (line == PitchLine.TOP_SIDELINE
-                        || line == PitchLine.BOTTOM_SIDELINE) {
-                    System.out.println("Top or Bottom");
-                    // check who last possessed the ball
-                    // give it to the closest member of the opposing team
-                    // force that player to stay on the line
-                    // update the AI controlling that team
-                } else if (line == PitchLine.LEFT_SIDELINE) {
-                    System.out.println("Left");
-                    // check possession to see whether it's a corner or goal kick
-                    // if goal kick
-                        // give to goalkeeper and force him not to move
-                    // if corner
-                        // give to closest member of the opposing team and force him not to move
-                } else if (line == PitchLine.RIGHT_SIDELINE) {
-                    System.out.println("Right");
-                    // check possession to see whether it's a corner or goal kick
-                    // if goal kick
-                        // give to goalkeeper and force him not to move
-                    // if corner
-                        // give to closest member of the opposing team and force him not to move
-                } else if (line == PitchLine.LEFT_GOAL) {
-                    System.out.println("Left Goal");
-                    // goal to right team (team 2)
-                    // reset pitch
-                } else if (line == PitchLine.RIGHT_GOAL) {
-                    System.out.println("Right Goal");
-                    // goal to left team (team 1)
-                    // reset pitch
-                }
-            }
+
         }
     }
 }
