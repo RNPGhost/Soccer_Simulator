@@ -79,7 +79,7 @@ public class Pitch{
             }
         }
         // check if the left goal intersection is valid
-        if (isValidIntersection(position,velocity,topLeftGoal,bottomLeftGoal)) {
+        else if (isValidIntersection(position,velocity,topLeftGoal,bottomLeftGoal)) {
             double newDistance = findDistance(position,
                     getIntersectionPoint(position,velocity,topLeftGoal,bottomLeftGoal));
             if (newDistance < distance) {
@@ -98,7 +98,7 @@ public class Pitch{
             }
         }
         // check if the right goal intersection is valid
-        if (isValidIntersection(position,velocity,topRightGoal,bottomRightGoal)) {
+        else if (isValidIntersection(position,velocity,topRightGoal,bottomRightGoal)) {
             double newDistance = findDistance(position,
                     getIntersectionPoint(position,velocity,topRightGoal,bottomRightGoal));
             if (newDistance < distance) {
@@ -173,8 +173,8 @@ public class Pitch{
         }
     }
 
-    private Team team1;
-    private Team team2;
+    private Team team1; // team 1 is on the left of the pitch
+    private Team team2; // team 2 is on the right of the pitch
     private Ball ball;
 
     public Pitch(Ball ball, Team team1, Team team2) {
