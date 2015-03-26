@@ -238,7 +238,7 @@ public class Pitch{
         ball.pitch = this;
 
         // create teams
-        team1 = new Team(this,ball,0,createPlayers());
+        team1 = new Team(this,ball,0,createLeftKickOffPlayers());
         team2 = new Team(this,ball,1,new ArrayList<Player>());
 
         // give teams to AI
@@ -246,15 +246,23 @@ public class Pitch{
         team2AI.updateTeam(team2);
     }
 
-    private List<Player> createPlayers() {
-        int playerID = 0;
-        Vector2d position = new Vector2d(0,0);
-        Vector2d velocity = new Vector2d(0,0);
-        Vector2d goalPosition = new Vector2d(0,0);
-        Player player = new Player(playerID,position,velocity,goalPosition);
+    private List<Player> createLeftKickOffPlayers() {
         List<Player> players = new ArrayList<Player>();
-        players.add(player);
+
+        // create kick taker
+        players.add(createStationaryPlayer(0,new Vector2d(0,0)));
+
+        // create kick receiver
+        players.add(createStationaryPlayer(1,new Vector2d(0,20)));
+
         return players;
+    }
+
+    private Player createStationaryPlayer(int playerID, Vector2d position) {
+        Vector2d pos = new Vector2d(position);
+        Vector2d velocity = new Vector2d(0,0);
+        Vector2d goalPosition = new Vector2d(pos);
+        return new StationaryPlayer(playerID,pos,velocity,goalPosition);
     }
 
     public int getTeam1ID() { return team1.getTeamID(); }

@@ -107,7 +107,7 @@ public class Ball {
         if (distance.length() <= requiredDistance) {
             if (inPossession) {
                 // tackle has been made, so prevent current possessor from retrieving the ball immediately
-                startPossessionGapTimer();
+                startPossessionGapTimer(500);
             }
             possessorTeamID = p.teamID;
             possessorPlayerID = p.playerID;
@@ -115,15 +115,13 @@ public class Ball {
         }
     }
 
-    private void startPossessionGapTimer() {
-        // set required time since last possession
-        int requiredPossessionGap = 500;
-
+    private void startPossessionGapTimer(int requiredPossessionGap) {
         // create timer and schedule end of gap
-        illegalPossessors.get(possessorTeamID).add(possessorPlayerID);
-        Timer recentlyTackled = new Timer();
-        recentlyTackled.schedule(new RecentlyTackledTask(possessorTeamID,possessorPlayerID),
-                requiredPossessionGap);
+        if(illegalPossessors.get(possessorTeamID).add(new Integer(possessorPlayerID))) {
+            Timer recentlyTackled = new Timer();
+            recentlyTackled.schedule(new RecentlyTackledTask(possessorTeamID,possessorPlayerID),
+                    requiredPossessionGap);
+        }
     }
 
     class RecentlyTackledTask extends TimerTask {
@@ -134,7 +132,7 @@ public class Ball {
             this.playerID = playerID;
         }
         public void run() {
-            illegalPossessors.get(teamID).remove(playerID);
+            illegalPossessors.get(teamID).remove(new Integer(playerID));
         }
     }
 
@@ -155,7 +153,7 @@ public class Ball {
         }
 
         // prevent current possessor from retrieving the ball immediately
-        startPossessionGapTimer();
+        startPossessionGapTimer(300);
 
         // update that ball is no longer in possession
         inPossession = false;

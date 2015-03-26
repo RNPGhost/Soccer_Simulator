@@ -7,6 +7,7 @@ import Main.Team;
 import javax.media.opengl.awt.GLCanvas;
 import javax.vecmath.Vector2d;
 import java.awt.*;
+import java.util.List;
 
 public class MouseInputAI implements AI {
     private Team team;
@@ -17,7 +18,25 @@ public class MouseInputAI implements AI {
     }
 
     public void selectPlayer(Point p) {
-        team.selectPlayer(0);
+        // convert the click position to a vector in the correct coordinates
+        Vector2d clickPosition = convertPointToVector(p);
+
+        // get a list of the players from the team
+        List<Player> players = team.getCopyOfPlayers();
+
+        // find the closest player to the click
+        double distance = Double.POSITIVE_INFINITY;
+        int playerID = -1;
+        for (Player player : players) {
+            Vector2d direction = player.getPosition();
+            direction.sub(clickPosition);
+            double newDistance = direction.length();
+            if (newDistance < distance) {
+                playerID = player.playerID;
+                distance = newDistance;
+            }
+        }
+        if (playerID >= 0) { team.selectPlayer(playerID); }
     }
 
     private Vector2d convertPointToVector(Point p) {
