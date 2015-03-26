@@ -13,6 +13,8 @@ public class Ball {
     private double maxVelocity = 300;
     private Map<Integer, List<Integer>> illegalPossessors = new HashMap<Integer, List<Integer>>();
     private boolean firstPossessionCheck = true;
+    private List<BallKickListener> kickListeners = new ArrayList<BallKickListener>();
+    private List<BallPossessionListener> possessionListeners = new ArrayList<BallPossessionListener>();
 
     public Ball(int teamID, int playerID) {
         inPossession = true;
@@ -49,6 +51,13 @@ public class Ball {
 
     public synchronized Vector2d getVelocity() { return new Vector2d(velocity); }
 
+    public synchronized void addBallKickListener(BallKickListener listener) {
+        kickListeners.add(listener);
+    }
+
+    public synchronized void addBallPossessionListener(BallPossessionListener listener) {
+        possessionListeners.add(listener);
+    }
     public synchronized void update(int deltaTime) {
         if (!inPossession) {
             // calculate acceleration = -v/3
@@ -86,10 +95,10 @@ public class Ball {
 
     private void takePossession(Player p) {
         // make sure player has not taken possession of the ball recently
-        if (illegalPossessors.get(p.teamID).contains(p.playerID)) { return; }
+        if (illegalPossessors.get(p.getTeamID()).contains(p.getPlayerID())) { return; }
 
         // make sure that the player isn't trying to tackle a team mate
-        if (inPossession && possessorTeamID == p.teamID) { return; }
+        if (inPossession && possessorTeamID == p.getTeamID()) { return; }
 
         // set required distance to take possession
         Double requiredDistance = 8.0; // the centre of the player must be within 0.5m of the centre of the ball
@@ -109,9 +118,13 @@ public class Ball {
                 // tackle has been made, so prevent current possessor from retrieving the ball immediately
                 startPossessionGapTimer(500);
             }
-            possessorTeamID = p.teamID;
-            possessorPlayerID = p.playerID;
+            possessorTeamID = p.getTeamID();
+            possessorPlayerID = p.getPlayerID();
             inPossession = true;
+
+            for (BallPossessionListener l : possessionListeners) {
+                l.possessionTaken();
+            }
         }
     }
 
@@ -157,6 +170,11 @@ public class Ball {
 
         // update that ball is no longer in possession
         inPossession = false;
+
+        // create kicked event
+        for (BallKickListener l : kickListeners) {
+            l.kicked();
+        }
 
         return true;
     }

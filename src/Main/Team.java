@@ -4,7 +4,7 @@ import javax.vecmath.Vector2d;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Team {
+public class Team implements BallPossessionListener {
     private Pitch pitch;
     private Ball ball;
     private int teamID;
@@ -17,12 +17,13 @@ public class Team {
     public Team(Pitch pitch, Ball ball, int teamID, List<Player> players) {
         this.pitch = pitch;
         this.ball = ball;
+        ball.addBallPossessionListener(this);
         this.teamID = teamID;
         this.players = players;
         for (int i = 0; i < players.size(); i++) {
             Player p = players.get(i);
-            p.playerID = i; // maintain invariant players[i].playerID = i
-            p.teamID = teamID;
+            p.setPlayerID(i); // maintain invariant players[i].playerID = i
+            p.setTeamID(teamID);
         }
     }
 
@@ -75,7 +76,6 @@ public class Team {
     }
 
     public void selectPlayer(int playerID) {
-        assert(isValidPlayerID(playerID));
         if (playerSelected) {
             getPlayer(selectedPlayerID).selected = false;
         }
@@ -85,8 +85,10 @@ public class Team {
     }
 
     public int getSelectedPlayerID() {
-        assert(playerSelected);
-        return selectedPlayerID;
+        if (playerSelected) {
+            return selectedPlayerID;
+        }
+        return -1;
     }
 
     public boolean isPlayerSelected() {
@@ -95,5 +97,11 @@ public class Team {
 
     public Vector2d getPlayerPosition(int playerID) {
         return players.get(playerID).getPosition();
+    }
+
+    public void possessionTaken() {
+        if (ball.getPossessorTeamID() == teamID) {
+            selectPlayer(ball.getPossessorPlayerID());
+        }
     }
 }

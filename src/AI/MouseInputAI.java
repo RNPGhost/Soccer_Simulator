@@ -32,7 +32,7 @@ public class MouseInputAI implements AI {
             direction.sub(clickPosition);
             double newDistance = direction.length();
             if (newDistance < distance) {
-                playerID = player.playerID;
+                playerID = player.getPlayerID();
                 distance = newDistance;
             }
         }
@@ -55,16 +55,14 @@ public class MouseInputAI implements AI {
     }
 
     public void kickBall(Point p) {
-        if (team.isPlayerSelected()) {
-            Vector2d direction = convertPointToVector(p);
-            direction.sub(getSelectedPlayerPosition());
-            team.kickBall(direction);
-        }
+        Vector2d direction = convertPointToVector(p);
+        direction.sub(getSelectedPlayerPosition());
+        team.kickBall(direction);
     }
 
     private Vector2d getSelectedPlayerPosition() {
         for (Player p : team.getCopyOfPlayers()) {
-            if (p.playerID == team.getSelectedPlayerID()) {
+            if (p.getPlayerID() == team.getSelectedPlayerID()) {
                 return p.getPosition();
             }
         }

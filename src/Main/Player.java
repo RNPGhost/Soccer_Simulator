@@ -3,17 +3,24 @@ package Main;
 import javax.vecmath.Vector2d;
 
 public class Player {
-    public int playerID;
-    public int teamID;
+    private int playerID;
+    public int getPlayerID() { return playerID; }
+    public void setPlayerID(int newPlayerID) { playerID = newPlayerID; }
+    private int teamID;
+    public int getTeamID() { return teamID; }
+    public void setTeamID(int newTeamID) { teamID = newTeamID; }
 
 
     private Vector2d position;
-    public Vector2d getPosition() { return new Vector2d(position.x,position.y); }
-
+    public Vector2d getPosition() { return new Vector2d(position); }
     private Vector2d velocity;
+    public Vector2d getVelocity() { return new Vector2d(velocity); }
     private Vector2d goalPosition;
+    public Vector2d getGoalPosition() { return new Vector2d(goalPosition); }
+
     private double maxAcceleration = 75;
     private double maxVelocity = 50;
+
     public boolean selected = false;
 
     public Player(int playerID, Vector2d position, Vector2d velocity, Vector2d goalPosition) {
@@ -91,9 +98,10 @@ public class Player {
     @SuppressWarnings("CloneDoesntCallSuperClone")
     @Override
     public Player clone() throws CloneNotSupportedException {
-        Player p =  new Player(playerID, new Vector2d(position), new Vector2d(velocity),
-                new Vector2d(goalPosition));
+        Player p =  new Player(playerID, getPosition(), getVelocity(),
+                getGoalPosition());
         p.selected = selected;
         return p;
     }
+
 }

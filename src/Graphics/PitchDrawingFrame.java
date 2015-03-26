@@ -181,7 +181,7 @@ public class PitchDrawingFrame implements GLEventListener {
             Vector2d position = p.getPosition();
             Tools.drawFilledCircle(position.x,position.y,playerRadius,team1Colour);
             if (p.selected) {
-                Tools.drawCircle(position.x,position.y,playerRadius,selectionColour);
+                Tools.drawCircle(position.x,position.y,playerRadius+1,selectionColour);
             }
             // draw ball if in possession
             drawBallInPossession(ball,pitch.getTeam1ID(),p,position,playerRadius);
@@ -215,8 +215,8 @@ public class PitchDrawingFrame implements GLEventListener {
         Color possessionColour = Color.white;
         if (ball.isInPossession()) {
             if (ball.getPossessorTeamID() == teamID) {
-                if (ball.getPossessorPlayerID() == p.playerID) {
-                    Tools.drawCircle(position.x,position.y,playerRadius+2,possessionColour);
+                if (ball.getPossessorPlayerID() == p.getPlayerID()) {
+                    Tools.drawCircle(position.x,position.y,playerRadius+3,possessionColour);
                 }
             }
         }

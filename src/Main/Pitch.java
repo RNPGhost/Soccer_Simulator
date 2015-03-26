@@ -7,8 +7,7 @@ import javax.vecmath.Vector2d;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Pitch{
-
+public class Pitch implements BallKickListener {
     // pitch dimensions
     final public static int width = 1200;
     final public static int height = 800;
@@ -42,6 +41,8 @@ public class Pitch{
     }
 
     private void findIntersectionLine() {
+        // intersections are wrong!!!
+
         Vector2d position = ball.getPosition();
         Vector2d velocity = ball.getVelocity();
         PitchLine line = null;
@@ -171,22 +172,23 @@ public class Pitch{
         // if the two lines are parallel
         if (velocity.x * gradient.y == gradient.x * velocity.y) { return false; }
 
-        Vector2d intersection = getIntersectionPoint(position,velocity,p1,gradient);
-        return (intersection.x >= Math.min(p1.x, p2.x) &&
-                intersection.x <= Math.max(p1.x, p2.x) &&
-                intersection.y >= Math.min(p1.y, p2.y) &&
-                intersection.y <= Math.max(p1.y, p2.y));
+        Vector2d intersection = getIntersectionPoint(position,velocity,p1,p2);
+        return (Math.round(intersection.x) >= Math.min(p1.x, p2.x) &&
+                Math.round(intersection.x) <= Math.max(p1.x, p2.x) &&
+                Math.round(intersection.y) >= Math.min(p1.y, p2.y) &&
+                Math.round(intersection.y) <= Math.max(p1.y, p2.y));
     }
 
-    private static Vector2d getIntersectionPoint(Vector2d p1, Vector2d g1, Vector2d p2, Vector2d g2) {
+    private static Vector2d getIntersectionPoint(Vector2d p1, Vector2d g1, Vector2d p2, Vector2d p3) {
         // l1 = p1 + t*g1
-        // l2 = p2 + s*g2
+        // l2 = p2 + s*(p3 - p2)
 
-        // if g1 == g2, return null
-        if (g1.x * g2.y == g2.x * g1.y) { return null; }
+        // calculate gradient of l2
+        Vector2d g2 = new Vector2d(p3);
+        g2.sub(p2);
 
-        // otherwise, find t
-        double t = ( g2.x * (p1.y - p2.y) + g2.y * (p2.x - p1.x) ) / ( g1.x * g2.y - g2.x * g1.y );
+        // find t
+        double t = (( g2.x * (p1.y - p2.y) + g2.y * (p2.x - p1.x) ) / ( (g1.x * g2.y) - (g2.x * g1.y) ));
 
         // plug t into the equation for l1
         return new Vector2d(p1.x + t * g1.x,p1.y + t * g1.y);
@@ -227,15 +229,24 @@ public class Pitch{
         }
     }
 
+    private AI team1AI;
+    private AI team2AI;
     private Ball ball;
     private Team team1;
     private Team team2;
+    private boolean waitingForKick;
 
     public Pitch(AI team1AI, AI team2AI, Ball ball) {
+        this.team1AI = team1AI;
+        this.team2AI = team2AI;
         this.ball = ball;
 
         // set the pitch for the ball
         ball.pitch = this;
+
+        // set the pitch to listen to the ball
+        waitingForKick = true;
+        ball.addBallKickListener(this);
 
         // create teams
         team1 = new Team(this,ball,0,createLeftKickOffPlayers());
@@ -291,4 +302,43 @@ public class Pitch{
         }
         return null;
     }
+
+    public void kicked() {
+        if (waitingForKick) {
+            waitingForKick = false;
+            team1 = new Team(this,ball,team1.getTeamID(),mobiliseTeamPlayers(team1.getTeamID()));
+            team1AI.updateTeam(team1);
+            team2 = new Team(this,ball,team2.getTeamID(),mobiliseTeamPlayers(team2.getTeamID()));
+            team2AI.updateTeam(team2);
+        }
+    }
+
+    private List<Player> mobiliseTeamPlayers(int teamID) {
+        // select the players to iterate through
+        List<Player> players;
+        if (teamID == team1.getTeamID()) {
+            players = team1.getCopyOfPlayers();
+        } else {
+            players = team2.getCopyOfPlayers();
+        }
+
+        // copy the players across, turning them into a default player if they are stationary
+        List<Player> newPlayers = new ArrayList<Player>();
+        for (Player p : players) {
+            if (p instanceof StationaryPlayer) {
+                Player player = new Player(p.getPlayerID(),p.getPosition(),p.getVelocity(),p.getGoalPosition());
+                player.selected = p.selected;
+                p = player;
+            }
+            newPlayers.add(p);
+        }
+
+        return newPlayers;
+    }
+
+    // make pitch a listener
+    // listen for 'kick' events whenever the ball goes out of play
+    // convert all 'StationaryPlayer's into normal players
+    // consider creating 'LeftHalfPlayer' and 'RightHalfPlayer'
+    // the changes for these would be in 'Team'
 }
