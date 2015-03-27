@@ -4,7 +4,7 @@ import javax.vecmath.Vector2d;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Team implements BallPossessionListener {
+public class Team {
     private Pitch pitch;
     private Ball ball;
     private int teamID;
@@ -17,7 +17,6 @@ public class Team implements BallPossessionListener {
     public Team(Pitch pitch, Ball ball, int teamID, List<Player> players) {
         this.pitch = pitch;
         this.ball = ball;
-        ball.addBallPossessionListener(this);
         this.teamID = teamID;
         this.players = players;
         for (int i = 0; i < players.size(); i++) {
@@ -52,7 +51,6 @@ public class Team implements BallPossessionListener {
     }
 
     private Player getPlayer(int playerID) {
-        assert(isValidPlayerID(playerID));
         return players.get(playerID);
     }
 

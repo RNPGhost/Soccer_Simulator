@@ -6,15 +6,18 @@ import java.util.*;
 public class Ball {
     private int possessorTeamID;
     private int possessorPlayerID;
-    private boolean inPossession;
+        private boolean inPossession;
     private Vector2d position;
     private Vector2d velocity;
+
     public Pitch pitch;
+
     private double maxVelocity = 300;
+
     private Map<Integer, List<Integer>> illegalPossessors = new HashMap<Integer, List<Integer>>();
     private boolean firstPossessionCheck = true;
-    private List<BallKickListener> kickListeners = new ArrayList<BallKickListener>();
-    private List<BallPossessionListener> possessionListeners = new ArrayList<BallPossessionListener>();
+    private boolean firstKick = false;
+    public void setFirstKick(boolean b) { firstKick = b; }
 
     public Ball(int teamID, int playerID) {
         inPossession = true;
@@ -51,13 +54,6 @@ public class Ball {
 
     public synchronized Vector2d getVelocity() { return new Vector2d(velocity); }
 
-    public synchronized void addBallKickListener(BallKickListener listener) {
-        kickListeners.add(listener);
-    }
-
-    public synchronized void addBallPossessionListener(BallPossessionListener listener) {
-        possessionListeners.add(listener);
-    }
     public synchronized void update(int deltaTime) {
         if (!inPossession) {
             // calculate acceleration = -v/3
@@ -122,9 +118,7 @@ public class Ball {
             possessorPlayerID = p.getPlayerID();
             inPossession = true;
 
-            for (BallPossessionListener l : possessionListeners) {
-                l.possessionTaken();
-            }
+            pitch.possessionTaken();
         }
     }
 
@@ -172,8 +166,9 @@ public class Ball {
         inPossession = false;
 
         // create kicked event
-        for (BallKickListener l : kickListeners) {
-            l.kicked();
+        if (firstKick) {
+            pitch.kicked();
+            firstKick = false;
         }
 
         return true;

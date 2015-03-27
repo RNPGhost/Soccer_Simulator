@@ -1,14 +1,12 @@
 package Main;
 
 import AI.AI;
-import AI.MouseInputAI;
 import AI.BasicAI;
+import AI.MouseInputAI;
 import Graphics.PitchDrawingFrame;
 import Graphics.Tools;
 
 import javax.vecmath.Vector2d;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class Game {
     Pitch pitch;
@@ -40,25 +38,5 @@ public class Game {
 
         // give the pitch and ball to the drawing frame
         pdFrame.initialise(pitch,ball);
-
-        // create update timer
-        createUpdateTimer();
-    }
-
-    private void createUpdateTimer() {
-        int period = 50;
-        Timer updateTimer = new Timer();
-        TimerTask updateTeams = new UpdateTeamsTask(period);
-        updateTimer.schedule(updateTeams,0,period);
-    }
-
-    class UpdateTeamsTask extends TimerTask {
-        private int period;
-        public UpdateTeamsTask(int period) {
-            this.period = period;
-        }
-        public void run() {
-            pitch.update(period);
-        }
     }
 }

@@ -6,8 +6,13 @@ import Graphics.Tools;
 import javax.vecmath.Vector2d;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
-public class Pitch implements BallKickListener {
+// consider creating 'LeftHalfPlayer' and 'RightHalfPlayer'
+// the changes for these would be in 'Team'
+
+public class Pitch {
     // pitch dimensions
     final public static int width = 1200;
     final public static int height = 800;
@@ -41,10 +46,11 @@ public class Pitch implements BallKickListener {
     }
 
     private void findIntersectionLine() {
-        // intersections are wrong!!!
-
+        // get ball position and direction of travel
         Vector2d position = ball.getPosition();
         Vector2d velocity = ball.getVelocity();
+
+        // initialise line, boundsIntersection and distance
         PitchLine line = null;
         Vector2d boundsIntersection = null;
         double distance = Double.POSITIVE_INFINITY;
@@ -128,43 +134,6 @@ public class Pitch implements BallKickListener {
         ballOutOfBounds(line, boundsIntersection);
     }
 
-    private void ballOutOfBounds(PitchLine line, Vector2d intersection) {
-        if (line == PitchLine.TOP_SIDELINE
-                || line == PitchLine.BOTTOM_SIDELINE) {
-            System.out.println("Top or Bottom");
-            if (team1.getTeamID() == ball.getPossessorTeamID()) {
-
-            } else {
-
-            }
-            // give it to the closest member of the opposing team
-            // force that player to stay on the line
-            // update the AI controlling that team
-        } else if (line == PitchLine.LEFT_SIDELINE) {
-            System.out.println("Left");
-            // check possession to see whether it's a corner or goal kick
-            // if goal kick
-            // give to goalkeeper and force him not to move
-            // if corner
-            // give to closest member of the opposing team and force him not to move
-        } else if (line == PitchLine.RIGHT_SIDELINE) {
-            System.out.println("Right");
-            // check possession to see whether it's a corner or goal kick
-            // if goal kick
-            // give to goalkeeper and force him not to move
-            // if corner
-            // give to closest member of the opposing team and force him not to move
-        } else if (line == PitchLine.LEFT_GOAL) {
-            System.out.println("Left Goal");
-            // goal to right team (team 2)
-            // reset pitch
-        } else if (line == PitchLine.RIGHT_GOAL) {
-            System.out.println("Right Goal");
-            // goal to left team (team 1)
-            // reset pitch
-        }
-    }
-
     private static boolean isValidIntersection(Vector2d position, Vector2d velocity, Vector2d p1, Vector2d p2) {
         Vector2d gradient = new Vector2d(p2);
         gradient.sub(p1);
@@ -234,40 +203,148 @@ public class Pitch implements BallKickListener {
     private Ball ball;
     private Team team1;
     private Team team2;
-    private boolean waitingForKick;
+    private int team1Score = 0;
+    private int team2Score = 0;
 
     public Pitch(AI team1AI, AI team2AI, Ball ball) {
         this.team1AI = team1AI;
         this.team2AI = team2AI;
         this.ball = ball;
 
+        // initiate teams
+        initiateTeams();
+
+        // initiate kick off
+        kickOff(team1.getTeamID());
+
         // set the pitch for the ball
         ball.pitch = this;
 
         // set the pitch to listen to the ball
-        waitingForKick = true;
-        ball.addBallKickListener(this);
+        ball.setFirstKick(true);
 
-        // create teams
-        team1 = new Team(this,ball,0,createLeftKickOffPlayers());
+        // create update timer
+        createUpdateTimer();
+    }
+
+    private void createUpdateTimer() {
+        int period = 50;
+        Timer updateTimer = new Timer();
+        TimerTask updateTeams = new UpdateTeamsTask(period);
+        updateTimer.schedule(updateTeams,0,period);
+    }
+
+    class UpdateTeamsTask extends TimerTask {
+        private int period;
+        public UpdateTeamsTask(int period) {
+            this.period = period;
+        }
+        public void run() {
+            update(period);
+        }
+    }
+
+    private void ballOutOfBounds(PitchLine line, Vector2d intersection) {
+        if (line == PitchLine.TOP_SIDELINE
+                || line == PitchLine.BOTTOM_SIDELINE) {
+            if (team1.getTeamID() == ball.getPossessorTeamID()) {
+                throwIn(team2.getTeamID(),intersection);
+            } else {
+                throwIn(team1.getTeamID(),intersection);
+            }
+        } else if (line == PitchLine.LEFT_SIDELINE) {
+            if (team1.getTeamID() == ball.getPossessorTeamID()) {
+                corner(team2.getTeamID(),intersection);
+            } else {
+                goalKick(team1.getTeamID(),intersection);
+            }
+        } else if (line == PitchLine.RIGHT_SIDELINE) {
+            if (team1.getTeamID() == ball.getPossessorTeamID()) {
+                goalKick(team2.getTeamID(), intersection);
+            } else {
+                corner(team1.getTeamID(),intersection);
+            }
+        } else if (line == PitchLine.LEFT_GOAL) {
+            team2Score += 1;
+            kickOff(team1.getTeamID());
+        } else if (line == PitchLine.RIGHT_GOAL) {
+            team1Score += 1;
+            kickOff(team2.getTeamID());
+        }
+
+        // waiting for kick allows all stationary players to become mobile again in 'kicked()'
+        ball.setFirstKick(true);
+    }
+
+    private void initiateTeams() {
+        team1 = new Team(this,ball,0,new ArrayList<Player>());
         team2 = new Team(this,ball,1,new ArrayList<Player>());
+    }
+
+    private void kickOff(int teamID) {
+        // create teams
+        team1 = new Team(this,ball,0,createTeam1KickOffPlayers(teamID));
+        team2 = new Team(this,ball,1,createTeam2KickOffPlayers(teamID));
 
         // give teams to AI
         team1AI.updateTeam(team1);
         team2AI.updateTeam(team2);
     }
 
-    private List<Player> createLeftKickOffPlayers() {
+    private List<Player> createTeam1KickOffPlayers(int teamID) {
         List<Player> players = new ArrayList<Player>();
 
-        // create kick taker
-        players.add(createStationaryPlayer(0,new Vector2d(0,0)));
+        // if team1 is kicking
+        if (team1.getTeamID() == teamID) {
+            // create kick taker
+            players.add(createStationaryPlayer(0,new Vector2d(0,0)));
+            // create kick receiver
+            players.add(createStationaryPlayer(1,new Vector2d(0,20)));
 
-        // create kick receiver
-        players.add(createStationaryPlayer(1,new Vector2d(0,20)));
+        // if team2 is kicking
+        } else {
+            // create 2 stationary players
+            players.add(createStationaryPlayer(0,new Vector2d(-100,-20)));
+            players.add(createStationaryPlayer(1,new Vector2d(-100,20)));
+        }
 
         return players;
     }
+
+    private List<Player> createTeam2KickOffPlayers(int teamID) {
+        List<Player> players = new ArrayList<Player>();
+
+        // if team2 is kicking
+        if (team2.getTeamID() == teamID) {
+            // create kick taker
+            players.add(createStationaryPlayer(0,new Vector2d(0,0)));
+            // create kick receiver
+            players.add(createStationaryPlayer(1,new Vector2d(0,20)));
+
+            // if team1 is kicking
+        } else {
+            // create 2 stationary players
+            players.add(createStationaryPlayer(0,new Vector2d(100,-20)));
+            players.add(createStationaryPlayer(1,new Vector2d(100,20)));
+        }
+
+        return players;
+    }
+
+    private void throwIn(int teamID, Vector2d point) {
+
+    }
+
+    private void corner(int teamID, Vector2d point) {
+
+    }
+
+    private void goalKick(int teamID, Vector2d point) {
+
+    }
+
+
+
 
     private Player createStationaryPlayer(int playerID, Vector2d position) {
         Vector2d pos = new Vector2d(position);
@@ -315,13 +392,15 @@ public class Pitch implements BallKickListener {
     }
 
     public void kicked() {
-        if (waitingForKick) {
-            waitingForKick = false;
-            team1 = new Team(this,ball,team1.getTeamID(),mobiliseTeamPlayers(team1.getTeamID()));
-            team1AI.updateTeam(team1);
-            team2 = new Team(this,ball,team2.getTeamID(),mobiliseTeamPlayers(team2.getTeamID()));
-            team2AI.updateTeam(team2);
-        }
+        team1 = new Team(this,ball,team1.getTeamID(),mobiliseTeamPlayers(team1.getTeamID()));
+        team2 = new Team(this,ball,team2.getTeamID(),mobiliseTeamPlayers(team2.getTeamID()));
+        team1AI.updateTeam(team1);
+        team2AI.updateTeam(team2);
+    }
+
+    public void possessionTaken() {
+        team1.possessionTaken();
+        team2.possessionTaken();
     }
 
     private List<Player> mobiliseTeamPlayers(int teamID) {
@@ -334,22 +413,18 @@ public class Pitch implements BallKickListener {
         }
 
         // copy the players across, turning them into a default player if they are stationary
-        List<Player> newPlayers = new ArrayList<Player>();
-        for (Player p : players) {
+        List<Player> newPlayers = new ArrayList<Player>(players.size());
+        for (int i = 0; i < players.size(); i++) {
+            Player p = players.get(i);
             if (p instanceof StationaryPlayer) {
-                Player player = new Player(p.getPlayerID(),p.getPosition(),p.getVelocity(),p.getGoalPosition());
+                Player player = new Player(p.getPlayerID(), p.getPosition(), p.getVelocity(), p.getGoalPosition());
                 player.selected = p.selected;
                 p = player;
             }
-            newPlayers.add(p);
+
+            newPlayers.add(i, p);
         }
 
         return newPlayers;
     }
-
-    // make pitch a listener
-    // listen for 'kick' events whenever the ball goes out of play
-    // convert all 'StationaryPlayer's into normal players
-    // consider creating 'LeftHalfPlayer' and 'RightHalfPlayer'
-    // the changes for these would be in 'Team'
 }
