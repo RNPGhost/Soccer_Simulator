@@ -54,6 +54,12 @@ public class Ball {
 
     public synchronized Vector2d getVelocity() { return new Vector2d(velocity); }
 
+    public synchronized void setPosition(Vector2d p) {
+        inPossession = false;
+        position = p;
+        velocity = new Vector2d(0,0);
+    }
+
     public synchronized void update(int deltaTime) {
         if (!inPossession) {
             // calculate acceleration = -v/3

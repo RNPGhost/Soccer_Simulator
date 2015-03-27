@@ -211,17 +211,17 @@ public class Pitch {
         this.team2AI = team2AI;
         this.ball = ball;
 
-        // initiate teams
-        initiateTeams();
-
-        // initiate kick off
-        kickOff(team1.getTeamID());
-
         // set the pitch for the ball
         ball.pitch = this;
 
         // set the pitch to listen to the ball
         ball.setFirstKick(true);
+
+        // initiate teams
+        initiateTeams();
+
+        // initiate kick off
+        kickOff(team1.getTeamID());
 
         // create update timer
         createUpdateTimer();
@@ -289,6 +289,15 @@ public class Pitch {
         // give teams to AI
         team1AI.updateTeam(team1);
         team2AI.updateTeam(team2);
+
+        System.out.println(team2.getTeamID());
+
+        for (Player p : team2.getCopyOfPlayers()) {
+            System.out.println(p.getTeamID() + " " + p.getPlayerID());
+        }
+
+        // put ball back in the middle of the pitch
+        ball.setPosition(new Vector2d(0,0));
     }
 
     private List<Player> createTeam1KickOffPlayers(int teamID) {

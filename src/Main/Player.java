@@ -100,6 +100,7 @@ public class Player {
     public Player clone() throws CloneNotSupportedException {
         Player p =  new Player(playerID, getPosition(), getVelocity(),
                 getGoalPosition());
+        p.setTeamID(teamID);
         p.selected = selected;
         return p;
     }
