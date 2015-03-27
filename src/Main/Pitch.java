@@ -185,12 +185,12 @@ public class Pitch {
     }
 
     private static boolean insidePenaltyBox(boolean left, Vector2d p) {
-        Boolean correctY = (p.y >= Tools.centreY - pBoxWidth/2 &&
-                            p.y <= Tools.centreY + pBoxWidth/2);
-        Boolean correctXLeft = (p.x >= Tools.centreX - width/2 &&
-                                p.x <= Tools.centreX - width/2 + pBoxLength);
-        Boolean correctXRight = (p.x >= Tools.centreX + width/2 - pBoxWidth &&
-                                 p.x <= Tools.centreX + width/2);
+        Boolean correctY = (p.y >= - pBoxWidth/2 &&
+                            p.y <= + pBoxWidth/2);
+        Boolean correctXLeft = (p.x >= - width/2 &&
+                                p.x <= - width/2 + pBoxLength);
+        Boolean correctXRight = (p.x >=  width/2 - pBoxLength &&
+                                 p.x <= width/2);
         if (left) {
             return (correctY && correctXLeft);
         } else {
