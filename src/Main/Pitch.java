@@ -245,24 +245,25 @@ public class Pitch {
     }
 
     private void ballOutOfBounds(PitchLine line, Vector2d intersection) {
+        Vector2d point = new Vector2d(Math.round(intersection.x),Math.round(intersection.y));
         if (line == PitchLine.TOP_SIDELINE
                 || line == PitchLine.BOTTOM_SIDELINE) {
             if (team1.getTeamID() == ball.getPossessorTeamID()) {
-                throwIn(team2.getTeamID(),intersection);
+                throwIn(team2.getTeamID(),point);
             } else {
-                throwIn(team1.getTeamID(),intersection);
+                throwIn(team1.getTeamID(),point);
             }
         } else if (line == PitchLine.LEFT_SIDELINE) {
             if (team1.getTeamID() == ball.getPossessorTeamID()) {
-                corner(team2.getTeamID(),intersection);
+                corner(team2.getTeamID(),point);
             } else {
-                goalKick(team1.getTeamID(),intersection);
+                goalKick(team1.getTeamID(),point);
             }
         } else if (line == PitchLine.RIGHT_SIDELINE) {
             if (team1.getTeamID() == ball.getPossessorTeamID()) {
-                goalKick(team2.getTeamID(), intersection);
+                goalKick(team2.getTeamID(),point);
             } else {
-                corner(team1.getTeamID(),intersection);
+                corner(team1.getTeamID(),point);
             }
         } else if (line == PitchLine.LEFT_GOAL) {
             team2Score += 1;
@@ -283,8 +284,8 @@ public class Pitch {
 
     private void kickOff(int teamID) {
         // create teams
-        team1 = new Team(this,ball,0,createTeam1KickOffPlayers(teamID));
-        team2 = new Team(this,ball,1,createTeam2KickOffPlayers(teamID));
+        team1 = new Team(this,ball,team1.getTeamID(),createTeam1KickOffPlayers(teamID));
+        team2 = new Team(this,ball,team2.getTeamID(),createTeam2KickOffPlayers(teamID));
 
         // give teams to AI
         team1AI.updateTeam(team1);
@@ -336,7 +337,48 @@ public class Pitch {
 
     private void throwIn(int teamID, Vector2d point) {
 
+        if (team1.getTeamID() == teamID) {
+            team1 = new Team(this,ball,team1.getTeamID(),createTeam1ThrowInPlayers(point));
+            team1AI.updateTeam(team1);
+        } else {
+            team2 = new Team(this,ball,team2.getTeamID(),createTeam2ThrowInPlayers(point));
+            team2AI.updateTeam(team2);
+        }
+
+        ball.setPosition(point);
     }
+
+    private List<Player> createTeam1ThrowInPlayers(Vector2d point) {
+        return createThrowInPlayers(team1.getCopyOfPlayers(),point);
+    }
+
+    private List<Player> createTeam2ThrowInPlayers(Vector2d point) {
+        return createThrowInPlayers(team2.getCopyOfPlayers(),point);
+    }
+
+    private List<Player> createThrowInPlayers(List<Player> players, Vector2d point) {
+        // initialise distance and player index
+        double distance = Double.POSITIVE_INFINITY;
+        int playerIndex = -1;
+        int playerID = -1;
+
+        for (int i = 0; i < players.size(); i++) {
+            Player p = players.get(i);
+            if (!(p instanceof Goalkeeper)) {
+                double newDistance = findDistance(p.getPosition(), point);
+                if (newDistance < distance) {
+                    distance = newDistance;
+                    playerIndex = i;
+                    playerID = p.getPlayerID();
+                }
+            }
+        }
+
+        players.set(playerIndex,createStationaryPlayer(playerID,point));
+
+        return players;
+    }
+
 
     private void corner(int teamID, Vector2d point) {
 
@@ -345,9 +387,6 @@ public class Pitch {
     private void goalKick(int teamID, Vector2d point) {
 
     }
-
-
-
 
     private Player createStationaryPlayer(int playerID, Vector2d position) {
         Vector2d pos = new Vector2d(position);
@@ -402,6 +441,13 @@ public class Pitch {
     }
 
     public void possessionTaken() {
+        // temporary change to allow mouse to control team that's in possession
+        if (team1.getTeamID() == ball.getPossessorTeamID()) {
+            team1AI.updateTeam(team1);
+        } else {
+            team1AI.updateTeam(team2);
+        }
+
         team1.possessionTaken();
         team2.possessionTaken();
     }
