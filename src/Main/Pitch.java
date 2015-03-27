@@ -257,11 +257,11 @@ public class Pitch {
             if (team1.getTeamID() == ball.getPossessorTeamID()) {
                 corner(team2.getTeamID(),point);
             } else {
-                goalKick(team1.getTeamID(),point);
+                goalKick(team1.getTeamID());
             }
         } else if (line == PitchLine.RIGHT_SIDELINE) {
             if (team1.getTeamID() == ball.getPossessorTeamID()) {
-                goalKick(team2.getTeamID(),point);
+                goalKick(team2.getTeamID());
             } else {
                 corner(team1.getTeamID(),point);
             }
@@ -379,13 +379,30 @@ public class Pitch {
         return players;
     }
 
-
     private void corner(int teamID, Vector2d point) {
+        // check whether corner should be taken from the top or bottom corner
+        double kickY;
+        if (point.y >= 0) {
+            kickY = (Pitch.height/2);
+        } else {
+            kickY = (-Pitch.height/2);
+        }
 
+        // create new teams with a 'throw in' from the corner
+        if (team1.getTeamID() == teamID) {
+            team1 = new Team(this,ball,team1.getTeamID(),createTeam1ThrowInPlayers(new Vector2d(point.x,kickY)));
+            team1AI.updateTeam(team1);
+        } else {
+            team2 = new Team(this,ball,team2.getTeamID(),createTeam2ThrowInPlayers(new Vector2d(point.x,kickY)));
+            team2AI.updateTeam(team2);
+        }
+
+
+        ball.setPosition(new Vector2d(point.x,kickY));
     }
 
-    private void goalKick(int teamID, Vector2d point) {
-
+    private void goalKick(int teamID) {
+        ball.giveToGoalKeeper(teamID);
     }
 
     private Player createStationaryPlayer(int playerID, Vector2d position) {
@@ -433,23 +450,19 @@ public class Pitch {
         return null;
     }
 
+    public int getGoalKeeperID(int teamID) {
+        if (team1.getTeamID() == teamID) {
+            return team1.getGoalKeeperID();
+        } else {
+            return team2.getGoalKeeperID();
+        }
+    }
+
     public void kicked() {
         team1 = new Team(this,ball,team1.getTeamID(),mobiliseTeamPlayers(team1.getTeamID()));
         team2 = new Team(this,ball,team2.getTeamID(),mobiliseTeamPlayers(team2.getTeamID()));
         team1AI.updateTeam(team1);
         team2AI.updateTeam(team2);
-    }
-
-    public void possessionTaken() {
-        // temporary change to allow mouse to control team that's in possession
-        if (team1.getTeamID() == ball.getPossessorTeamID()) {
-            team1AI.updateTeam(team1);
-        } else {
-            team1AI.updateTeam(team2);
-        }
-
-        team1.possessionTaken();
-        team2.possessionTaken();
     }
 
     private List<Player> mobiliseTeamPlayers(int teamID) {
@@ -476,4 +489,17 @@ public class Pitch {
 
         return newPlayers;
     }
+
+    public void possessionTaken() {
+        // temporary change to allow mouse to control team that's in possession
+        if (team1.getTeamID() == ball.getPossessorTeamID()) {
+            team1AI.updateTeam(team1);
+        } else {
+            team1AI.updateTeam(team2);
+        }
+
+        team1.possessionTaken();
+        team2.possessionTaken();
+    }
+
 }

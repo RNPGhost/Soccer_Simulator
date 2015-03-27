@@ -8,9 +8,11 @@ public class Team {
     private Pitch pitch;
     private Ball ball;
     private int teamID;
+    public int getTeamID() { return teamID; }
+    private int goalKeeperID;
+    public int getGoalKeeperID() { return goalKeeperID; }
     private int selectedPlayerID;
     private boolean playerSelected = false;
-    public int getTeamID() { return teamID; }
 
     List<Player> players = new ArrayList<Player>();
 
@@ -23,6 +25,9 @@ public class Team {
             Player p = players.get(i);
             p.setPlayerID(i); // maintain invariant players[i].playerID = i
             p.setTeamID(teamID);
+            if (p instanceof Goalkeeper) {
+                goalKeeperID = i;
+            }
         }
     }
 

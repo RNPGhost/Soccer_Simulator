@@ -60,6 +60,13 @@ public class Ball {
         velocity = new Vector2d(0,0);
     }
 
+    public synchronized void giveToGoalKeeper(int teamID) {
+        possessorPlayerID = pitch.getGoalKeeperID(teamID);
+        possessorTeamID = teamID;
+        inPossession = true;
+        pitch.possessionTaken();
+    }
+
     public synchronized void update(int deltaTime) {
         if (!inPossession) {
             // calculate acceleration = -v/3
@@ -83,6 +90,11 @@ public class Ball {
     }
 
     public synchronized void updatePossession() {
+        // no one can tackle a goal keeper
+        if (inPossession &&
+                possessorPlayerID == pitch.getGoalKeeperID(possessorTeamID)) {
+            return;
+        }
         if (firstPossessionCheck) {
             initialiseIllegalPossessors();
             firstPossessionCheck = false;
