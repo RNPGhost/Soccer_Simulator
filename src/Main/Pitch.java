@@ -290,12 +290,6 @@ public class Pitch {
         team1AI.updateTeam(team1);
         team2AI.updateTeam(team2);
 
-        System.out.println(team2.getTeamID());
-
-        for (Player p : team2.getCopyOfPlayers()) {
-            System.out.println(p.getTeamID() + " " + p.getPlayerID());
-        }
-
         // put ball back in the middle of the pitch
         ball.setPosition(new Vector2d(0,0));
     }
