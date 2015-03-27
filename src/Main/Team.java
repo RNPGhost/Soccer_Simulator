@@ -10,7 +10,10 @@ public class Team {
     private int teamID;
     public int getTeamID() { return teamID; }
     private int goalKeeperID;
-    public int getGoalKeeperID() { return goalKeeperID; }
+    public int getGoalKeeperID() {
+        System.out.println(goalKeeperID);
+        return goalKeeperID;
+    }
     private int selectedPlayerID;
     private boolean playerSelected = false;
 
@@ -27,8 +30,10 @@ public class Team {
             p.setTeamID(teamID);
             if (p instanceof Goalkeeper) {
                 goalKeeperID = i;
+                System.out.println("Goal keeper found on team " + teamID);
             }
         }
+        System.out.println("team constructed");
     }
 
     public void updatePlayers(int deltaTime) {

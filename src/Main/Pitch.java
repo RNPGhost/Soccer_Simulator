@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-// consider creating 'LeftHalfPlayer' and 'RightHalfPlayer'
-// the changes for these would be in 'Team'
+// add kicker in kickOff to invalid players in ball
+// remove him from invalid players on first possessionTaken
 
 public class Pitch {
     // pitch dimensions
@@ -202,6 +202,8 @@ public class Pitch {
     private AI team2AI;
     private Ball ball;
     private Team team1;
+
+
     private Team team2;
     private int team1Score = 0;
     private int team2Score = 0;
@@ -267,9 +269,11 @@ public class Pitch {
             }
         } else if (line == PitchLine.LEFT_GOAL) {
             team2Score += 1;
+            System.out.println("Team 1: " + team1Score + "  Team 2: " + team2Score);
             kickOff(team1.getTeamID());
         } else if (line == PitchLine.RIGHT_GOAL) {
             team1Score += 1;
+            System.out.println("Team 1: " + team1Score + "  Team 2: " + team2Score);
             kickOff(team2.getTeamID());
         }
 
@@ -311,6 +315,8 @@ public class Pitch {
             players.add(createStationaryPlayer(0,new Vector2d(-100,-20)));
             players.add(createStationaryPlayer(1,new Vector2d(-100,20)));
         }
+        // create goal keeper
+        players.add(createGoalKeeper(2,new Vector2d(-Pitch.width/2,0)));
 
         return players;
     }
@@ -331,6 +337,8 @@ public class Pitch {
             players.add(createStationaryPlayer(0,new Vector2d(100,-20)));
             players.add(createStationaryPlayer(1,new Vector2d(100,20)));
         }
+        // create goal keeper
+        players.add(createGoalKeeper(2,new Vector2d(Pitch.width/2,0)));
 
         return players;
     }
@@ -412,13 +420,11 @@ public class Pitch {
         return new StationaryPlayer(playerID,pos,velocity,goalPosition);
     }
 
-    public int getTeam1ID() { return team1.getTeamID(); }
-    public int getTeam2ID() { return team2.getTeamID(); }
-
-    public List<Player> getCopyOfPlayers(int teamID) {
-        assert(team1.getTeamID() == teamID || team2.getTeamID() == teamID);
-        if (team1.getTeamID() == teamID) { return team1.getCopyOfPlayers(); }
-        return team2.getCopyOfPlayers();
+    private Goalkeeper createGoalKeeper(int playerID, Vector2d position) {
+        Vector2d pos = new Vector2d(position);
+        Vector2d velocity = new Vector2d(0,0);
+        Vector2d goalPosition = new Vector2d(pos);
+        return new Goalkeeper(playerID,pos,velocity,goalPosition);
     }
 
     public void update(int deltaTime) {
@@ -428,6 +434,16 @@ public class Pitch {
         ball.updatePossession();
         checkBallOutOfBounds();
     }
+
+    public List<Player> getCopyOfPlayers(int teamID) {
+        assert(team1.getTeamID() == teamID || team2.getTeamID() == teamID);
+        if (team1.getTeamID() == teamID) { return team1.getCopyOfPlayers(); }
+        return team2.getCopyOfPlayers();
+    }
+
+    public int getTeam1ID() { return team1.getTeamID(); }
+
+    public int getTeam2ID() { return team2.getTeamID(); }
 
     public boolean ballIsInPossession() {
         return ball.isInPossession();
@@ -475,19 +491,16 @@ public class Pitch {
         }
 
         // copy the players across, turning them into a default player if they are stationary
-        List<Player> newPlayers = new ArrayList<Player>(players.size());
         for (int i = 0; i < players.size(); i++) {
             Player p = players.get(i);
             if (p instanceof StationaryPlayer) {
                 Player player = new Player(p.getPlayerID(), p.getPosition(), p.getVelocity(), p.getGoalPosition());
                 player.selected = p.selected;
-                p = player;
+                players.set(i, player);
             }
-
-            newPlayers.add(i, p);
         }
 
-        return newPlayers;
+        return players;
     }
 
     public void possessionTaken() {
@@ -498,8 +511,8 @@ public class Pitch {
             team1AI.updateTeam(team2);
         }
 
+        ball.possessionTaken();
         team1.possessionTaken();
         team2.possessionTaken();
     }
-
 }

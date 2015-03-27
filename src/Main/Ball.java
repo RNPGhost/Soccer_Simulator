@@ -17,7 +17,9 @@ public class Ball {
     private Map<Integer, List<Integer>> illegalPossessors = new HashMap<Integer, List<Integer>>();
     private boolean firstPossessionCheck = true;
     private boolean firstKick = false;
+    private boolean goalKeeperHasPossession = false;
     public void setFirstKick(boolean b) { firstKick = b; }
+
 
     public Ball(int teamID, int playerID) {
         inPossession = true;
@@ -37,6 +39,10 @@ public class Ball {
     }
 
     public boolean isInPossession() { return inPossession; }
+
+    public void possessionTaken() {
+        goalKeeperHasPossession = (possessorPlayerID == pitch.getGoalKeeperID(possessorTeamID));
+    }
 
     public synchronized int getPossessorTeamID() {
         assert(inPossession);
@@ -91,8 +97,7 @@ public class Ball {
 
     public synchronized void updatePossession() {
         // no one can tackle a goal keeper
-        if (inPossession &&
-                possessorPlayerID == pitch.getGoalKeeperID(possessorTeamID)) {
+        if (goalKeeperHasPossession) {
             return;
         }
         if (firstPossessionCheck) {
@@ -142,7 +147,7 @@ public class Ball {
 
     private void startPossessionGapTimer(int requiredPossessionGap) {
         // create timer and schedule end of gap
-        if(illegalPossessors.get(possessorTeamID).add(new Integer(possessorPlayerID))) {
+        if(illegalPossessors.get(possessorTeamID).add(possessorPlayerID)) {
             Timer recentlyTackled = new Timer();
             recentlyTackled.schedule(new RecentlyTackledTask(possessorTeamID,possessorPlayerID),
                     requiredPossessionGap);
@@ -188,6 +193,8 @@ public class Ball {
             pitch.kicked();
             firstKick = false;
         }
+
+        goalKeeperHasPossession = false;
 
         return true;
     }

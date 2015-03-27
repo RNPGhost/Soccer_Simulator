@@ -37,7 +37,7 @@ public class Tools {
 
         // make the frame full screen
         frame.setExtendedState(Frame.MAXIMIZED_BOTH);
-        frame.setUndecorated(true);
+        // frame.setUndecorated(true);
         frame.setVisible(true);
 
         // make program close when window closes

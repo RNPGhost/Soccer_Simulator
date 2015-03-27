@@ -1,6 +1,7 @@
 package Main;
 
 import javax.vecmath.Vector2d;
+import java.lang.reflect.InvocationTargetException;
 
 public class Player {
     private int playerID;
@@ -91,18 +92,29 @@ public class Player {
         this.goalPosition = goalPosition;
     }
 
-    private boolean validGoalPosition(Vector2d goalPosition) {
-        return Pitch.insidePitch(goalPosition);
-    }
-
     @SuppressWarnings("CloneDoesntCallSuperClone")
     @Override
     public Player clone() throws CloneNotSupportedException {
-        Player p =  new Player(playerID, getPosition(), getVelocity(),
-                getGoalPosition());
+        Player p = null;
+        try {
+            p = getClass().getDeclaredConstructor
+                    (int.class, position.getClass(), velocity.getClass(), goalPosition.getClass())
+                    .newInstance(playerID, getPosition(), getVelocity(), getGoalPosition());
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } finally {
+            if (p == null) {
+                p = new Player(getPlayerID(), getPosition(), getVelocity(), getGoalPosition());
+            }
+        }
         p.setTeamID(teamID);
         p.selected = selected;
         return p;
     }
-
 }
