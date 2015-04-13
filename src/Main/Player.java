@@ -17,7 +17,7 @@ public class Player {
     private Vector2d velocity;
     public Vector2d getVelocity() { return new Vector2d(velocity); }
     private Vector2d goalPosition;
-    public Vector2d getGoalPosition() { return new Vector2d(goalPosition); }
+    private Vector2d getGoalPosition() { return new Vector2d(goalPosition); }
 
     private double maxAcceleration = 75;
     private double maxVelocity = 50;

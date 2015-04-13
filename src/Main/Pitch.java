@@ -456,6 +456,14 @@ public class Pitch {
         return null;
     }
 
+    public Vector2d getBallPosition() {
+        if (ball.isInPossession()) {
+            return getBallPossessorPosition();
+        } else {
+            return ball.getPosition();
+        }
+    }
+
     public Vector2d getPlayerPosition(int teamID, int playerID) {
         if (team1.getTeamID() == teamID) {
             return team1.getPlayerPosition(playerID);
@@ -494,7 +502,7 @@ public class Pitch {
         for (int i = 0; i < players.size(); i++) {
             Player p = players.get(i);
             if (p instanceof StationaryPlayer) {
-                Player player = new Player(p.getPlayerID(), p.getPosition(), p.getVelocity(), p.getGoalPosition());
+                Player player = new Player(p.getPlayerID(), p.getPosition(), p.getVelocity(), p.getPosition());
                 player.selected = p.selected;
                 players.set(i, player);
             }
@@ -504,13 +512,6 @@ public class Pitch {
     }
 
     public void possessionTaken() {
-        // temporary change to allow mouse to control team that's in possession
-        if (team1.getTeamID() == ball.getPossessorTeamID()) {
-            team1AI.updateTeam(team1);
-        } else {
-            team1AI.updateTeam(team2);
-        }
-
         ball.possessionTaken();
         team1.possessionTaken();
         team2.possessionTaken();
