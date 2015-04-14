@@ -41,11 +41,19 @@ public class BasicAI implements AI{
     }
 
     private void updateGoalKeeper() {
-        Vector2d ballPosition = team.getPitch().getBallPosition();
-        double angle = new Vector2d(0,-1).angle(new Vector2d(ballPosition.getX()-Pitch.width/2,ballPosition.getY()));
-        double goalPositionY = Math.cos(angle)*Pitch.goalWidth/2;
-        double goalPositionX = Math.sin(angle)*Pitch.goalWidth/2;
-        Vector2d goalPosition = new Vector2d(Pitch.width/2-goalPositionX,-goalPositionY);
+        Pitch pitch = team.getPitch();
+        Vector2d ballPosition = pitch.getBallPosition();
+        Vector2d goalPosition = new Vector2d();
+
+        if (pitch.ballIsInPossession()) {
+            double angle = new Vector2d(0,-1).angle(new Vector2d(ballPosition.getX()-Pitch.width/2,ballPosition.getY()));
+            double goalPositionY = Math.cos(angle)*Pitch.goalWidth/2;
+            double goalPositionX = Math.sin(angle)*Pitch.goalWidth/2;
+            goalPosition = new Vector2d(Pitch.width/2-goalPositionX,-goalPositionY);
+        } else {
+            // find best interception point and get there asap
+        }
+
         team.setPlayerGoalPosition(team.getGoalKeeperID(),goalPosition);
     }
 }

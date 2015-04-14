@@ -104,6 +104,8 @@ public class Team {
         return players.get(playerID).getPosition();
     }
 
+    public Vector2d getPlayerVelocity(int playerID) { return players.get(playerID).getVelocity(); }
+
     public void possessionTaken() {
         if (ball.getPossessorTeamID() == teamID) {
             selectPlayer(ball.getPossessorPlayerID());

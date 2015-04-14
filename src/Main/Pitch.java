@@ -427,6 +427,8 @@ public class Pitch {
         return new Goalkeeper(playerID,pos,velocity,goalPosition);
     }
 
+
+
     public void update(int deltaTime) {
         team1.updatePlayers(deltaTime);
         team2.updatePlayers(deltaTime);
@@ -449,18 +451,19 @@ public class Pitch {
         return ball.isInPossession();
     }
 
-    public Vector2d getBallPossessorPosition() {
-        if (ball.isInPossession()) {
-            return getPlayerPosition(ball.getPossessorTeamID(),ball.getPossessorPlayerID());
-        }
-        return null;
-    }
-
     public Vector2d getBallPosition() {
         if (ball.isInPossession()) {
             return getBallPossessorPosition();
         } else {
             return ball.getPosition();
+        }
+    }
+
+    public Vector2d getBallVelocity() {
+        if (ball.isInPossession()) {
+            return getBallPossessorVelocity();
+        } else {
+            return ball.getVelocity();
         }
     }
 
@@ -474,12 +477,30 @@ public class Pitch {
         return null;
     }
 
+    public Vector2d getPlayerVelocity(int teamID, int playerID) {
+        if (team1.getTeamID() == teamID) {
+            return team1.getPlayerVelocity(playerID);
+        }
+        if (team2.getTeamID() == teamID) {
+            return team2.getPlayerVelocity(playerID);
+        }
+        return null;
+    }
+
     public int getGoalKeeperID(int teamID) {
         if (team1.getTeamID() == teamID) {
             return team1.getGoalKeeperID();
         } else {
             return team2.getGoalKeeperID();
         }
+    }
+
+    private Vector2d getBallPossessorPosition() {
+        return getPlayerPosition(ball.getPossessorTeamID(),ball.getPossessorPlayerID());
+    }
+
+    private Vector2d getBallPossessorVelocity() {
+        return getPlayerVelocity(ball.getPossessorTeamID(),ball.getPossessorPlayerID());
     }
 
     public void kicked() {
