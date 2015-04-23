@@ -20,7 +20,9 @@ public class Player {
     private Vector2d getGoalPosition() { return new Vector2d(goalPosition); }
 
     private double maxAcceleration = 75;
+    public double getMaxAcceleration() { return maxAcceleration; }
     private double maxVelocity = 50;
+    public double getMaxVelocity() { return maxVelocity; }
 
     public boolean selected = false;
 
