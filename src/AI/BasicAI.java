@@ -157,13 +157,16 @@ public class BasicAI implements AI{
                 // find the vector from the target to the ball
                 Vector2d targetToBall = pitch.getBallPosition();
                 targetToBall.sub(target.getPosition());
-                targetToBall.normalize();
+                if (targetToBall.length() > 0.01) {
+                    targetToBall.normalize();
+                    targetToBall.scale(20);
+                }
 
                 // mark the target towards the ball in the direction the target is running
-                targetToBall.scale(20);
-                Vector2d markingPosition = pitch.getBallPosition();
+                Vector2d markingPosition = target.getVelocity();
+                markingPosition.scale(2);
+                markingPosition.add(target.getPosition());
                 markingPosition.add(targetToBall);
-                markingPosition.add(target.getVelocity());
 
                 // set marking position as goal position for the player
                 team.setPlayerGoalPosition(p.getPlayerID(),markingPosition);
