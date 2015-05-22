@@ -133,53 +133,103 @@ public class BasicAI implements AI{
         }
         List<Player> opponents = pitch.getCopyOfPlayers(opponentID);
 
-        if (pitch.ballIsInPossession() && pitch.getBallPossessorTeamID() == team.getTeamID()) {
+        if (pitch.ballIsInPossession()) {
 
-            // run away from the two nearest players
+            if (pitch.getBallPossessorTeamID() == team.getTeamID()) {
+                // run away from the two nearest players
+                for (Player p: players) {
+                    if (opponents.size() > 1) {
+                        Player defender1;
+                        Player defender2;
+                        defender1 = opponents.get(0);
+                        defender2 = opponents.get(1);
 
-        } else {
-            // for every player, find the closest opponent that isn't a goal keeper
-            for (int i = 0; i < players.size(); i++) {
-                Player p = players.get(i);
-                if (p.getPlayerID() != team.getGoalKeeperID()) {
-                    double dist = Double.POSITIVE_INFINITY;
-                    int k = -1;
-                    // for each opponent, check if they're closer than any previous opponents
-                    for (int j = 0; j < opponents.size(); j++) {
-                        Player o = opponents.get(j);
-                        if (!(o instanceof Goalkeeper)) {
-                            Vector2d direction = new Vector2d(o.getPosition());
-                            direction.sub(p.getPosition());
-                            if (direction.length() < dist) {
-                                dist = direction.length();
-                                k = j;
+                        for (int i = 2; i < opponents.size(); i++) {
+                            Vector2d direction1 = defender1.getPosition();
+                            direction1.sub(p.getPosition());
+                            Vector2d direction2 = defender2.getPosition();
+                            direction2.sub(p.getPosition());
+
+                            // maintain invariant that defender1 is always closer than defender2
+                            if (direction2.length() < direction1.length()) {
+                                Player temp = defender1;
+                                defender1 = defender2;
+                                defender2 = temp;
+                            }
+
+                            Vector2d direction3 = opponents.get(i).getPosition();
+                            direction3.sub(p.getPosition());
+
+                            if (direction3.length() < direction2.length()) {
+                                defender2 = opponents.get(i);
                             }
                         }
+
+                        Vector2d direction1 = defender1.getPosition();
+                        direction1.sub(p.getPosition());
+                        Vector2d direction2 = defender2.getPosition();
+                        direction2.sub(p.getPosition());
+
+                        Vector2d avoid = direction1;
+                        avoid.add(direction2);
+                        avoid.scale(0.5);
+
+                        Vector2d travelDirection = p.getPosition();
+                        travelDirection.sub(avoid);
+                        travelDirection.normalize();
+                        travelDirection.scale(50);
+                        travelDirection.add(p.getPosition());
+
+                        team.setPlayerGoalPosition(p.getPlayerID(),travelDirection);
                     }
+                }
+            } else {
+                // for every player, find the closest opponent that isn't a goal keeper
+                for (int i = 0; i < players.size(); i++) {
+                    Player p = players.get(i);
+                    if (p.getPlayerID() != team.getGoalKeeperID()) {
+                        double dist = Double.POSITIVE_INFINITY;
+                        int k = -1;
+                        // for each opponent, check if they're closer than any previous opponents
+                        for (int j = 0; j < opponents.size(); j++) {
+                            Player o = opponents.get(j);
+                            if (!(o instanceof Goalkeeper)) {
+                                Vector2d direction = new Vector2d(o.getPosition());
+                                direction.sub(p.getPosition());
+                                if (direction.length() < dist) {
+                                    dist = direction.length();
+                                    k = j;
+                                }
+                            }
+                        }
 
-                    Player target = opponents.get(k);
+                        Player target = opponents.get(k);
 
-                    // find the vector from the target to the ball
-                    Vector2d targetToBall = pitch.getBallPosition();
-                    targetToBall.sub(target.getPosition());
-                    if (targetToBall.length() > 0.01) {
-                        targetToBall.normalize();
-                        targetToBall.scale(20);
+                        // find the vector from the target to the ball
+                        Vector2d targetToBall = pitch.getBallPosition();
+                        targetToBall.sub(target.getPosition());
+                        if (targetToBall.length() > 0.01) {
+                            targetToBall.normalize();
+                            targetToBall.scale(20);
+                        }
+
+                        // mark the target towards the ball in the direction the target is running
+                        Vector2d markingPosition = target.getVelocity();
+                        markingPosition.scale(2);
+                        markingPosition.add(target.getPosition());
+                        markingPosition.add(targetToBall);
+
+                        // set marking position as goal position for the player
+                        team.setPlayerGoalPosition(p.getPlayerID(),markingPosition);
+
+                        // remove the target from opponents to show he's being marked
+                        opponents.remove(k);
                     }
-
-                    // mark the target towards the ball in the direction the target is running
-                    Vector2d markingPosition = target.getVelocity();
-                    markingPosition.scale(2);
-                    markingPosition.add(target.getPosition());
-                    markingPosition.add(targetToBall);
-
-                    // set marking position as goal position for the player
-                    team.setPlayerGoalPosition(p.getPlayerID(),markingPosition);
-
-                    // remove the target from opponents to show he's being marked
-                    opponents.remove(k);
                 }
             }
+
+        } else {
+            // intercept the ball
         }
     }
 
