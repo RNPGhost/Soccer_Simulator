@@ -133,46 +133,52 @@ public class BasicAI implements AI{
         }
         List<Player> opponents = pitch.getCopyOfPlayers(opponentID);
 
-        // for every player, find the closest opponent that isn't a goal keeper
-        for (int i = 0; i < players.size(); i++) {
-            Player p = players.get(i);
-            if (p.getPlayerID() != team.getGoalKeeperID()) {
-                double dist = Double.POSITIVE_INFINITY;
-                int k = -1;
-                // for each opponent, check if they're closer than any previous opponents
-                for (int j = 0; j < opponents.size(); j++) {
-                    Player o = opponents.get(j);
-                    if (!(o instanceof Goalkeeper)) {
-                        Vector2d direction = new Vector2d(o.getPosition());
-                        direction.sub(p.getPosition());
-                        if (direction.length() < dist) {
-                            dist = direction.length();
-                            k = j;
+        if (pitch.ballIsInPossession() && pitch.getBallPossessorTeamID() == team.getTeamID()) {
+
+            // run away from the two nearest players
+
+        } else {
+            // for every player, find the closest opponent that isn't a goal keeper
+            for (int i = 0; i < players.size(); i++) {
+                Player p = players.get(i);
+                if (p.getPlayerID() != team.getGoalKeeperID()) {
+                    double dist = Double.POSITIVE_INFINITY;
+                    int k = -1;
+                    // for each opponent, check if they're closer than any previous opponents
+                    for (int j = 0; j < opponents.size(); j++) {
+                        Player o = opponents.get(j);
+                        if (!(o instanceof Goalkeeper)) {
+                            Vector2d direction = new Vector2d(o.getPosition());
+                            direction.sub(p.getPosition());
+                            if (direction.length() < dist) {
+                                dist = direction.length();
+                                k = j;
+                            }
                         }
                     }
+
+                    Player target = opponents.get(k);
+
+                    // find the vector from the target to the ball
+                    Vector2d targetToBall = pitch.getBallPosition();
+                    targetToBall.sub(target.getPosition());
+                    if (targetToBall.length() > 0.01) {
+                        targetToBall.normalize();
+                        targetToBall.scale(20);
+                    }
+
+                    // mark the target towards the ball in the direction the target is running
+                    Vector2d markingPosition = target.getVelocity();
+                    markingPosition.scale(2);
+                    markingPosition.add(target.getPosition());
+                    markingPosition.add(targetToBall);
+
+                    // set marking position as goal position for the player
+                    team.setPlayerGoalPosition(p.getPlayerID(),markingPosition);
+
+                    // remove the target from opponents to show he's being marked
+                    opponents.remove(k);
                 }
-
-                Player target = opponents.get(k);
-
-                // find the vector from the target to the ball
-                Vector2d targetToBall = pitch.getBallPosition();
-                targetToBall.sub(target.getPosition());
-                if (targetToBall.length() > 0.01) {
-                    targetToBall.normalize();
-                    targetToBall.scale(20);
-                }
-
-                // mark the target towards the ball in the direction the target is running
-                Vector2d markingPosition = target.getVelocity();
-                markingPosition.scale(2);
-                markingPosition.add(target.getPosition());
-                markingPosition.add(targetToBall);
-
-                // set marking position as goal position for the player
-                team.setPlayerGoalPosition(p.getPlayerID(),markingPosition);
-
-                // remove the target from opponents to show he's being marked
-                opponents.remove(k);
             }
         }
     }

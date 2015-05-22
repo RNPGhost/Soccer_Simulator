@@ -202,9 +202,8 @@ public class Pitch {
     private AI team2AI;
     private Ball ball;
     private Team team1;
-
-
     private Team team2;
+
     private int team1Score = 0;
     private int team2Score = 0;
 
@@ -427,9 +426,7 @@ public class Pitch {
         return new Goalkeeper(playerID,pos,velocity,goalPosition);
     }
 
-
-
-    public void update(int deltaTime) {
+    private void update(int deltaTime) {
         team1.updatePlayers(deltaTime);
         team2.updatePlayers(deltaTime);
         ball.update(deltaTime);
@@ -450,6 +447,10 @@ public class Pitch {
     public boolean ballIsInPossession() {
         return ball.isInPossession();
     }
+
+    public int getBallPossessorTeamID() { return ball.getPossessorTeamID(); }
+
+    public int getBallPossessorPlayerID() { return ball.getPossessorPlayerID(); }
 
     public Vector2d getBallPosition() {
         if (ball.isInPossession()) {

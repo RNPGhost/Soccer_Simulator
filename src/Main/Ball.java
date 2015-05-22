@@ -6,7 +6,7 @@ import java.util.*;
 public class Ball {
     private int possessorTeamID;
     private int possessorPlayerID;
-        private boolean inPossession;
+    private boolean inPossession;
     private Vector2d position;
     private Vector2d velocity;
 
