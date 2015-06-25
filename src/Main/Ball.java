@@ -13,6 +13,7 @@ public class Ball {
     public Pitch pitch;
 
     private double maxVelocity = 300;
+    private double decelerationFactor = 1/3f;
 
     private Map<Integer, List<Integer>> illegalPossessors = new HashMap<Integer, List<Integer>>();
     private boolean firstPossessionCheck = true;
@@ -60,6 +61,8 @@ public class Ball {
 
     public synchronized Vector2d getVelocity() { return new Vector2d(velocity); }
 
+    public double getDecelerationFactor() { return decelerationFactor; }
+
     public synchronized void setPosition(Vector2d p) {
         inPossession = false;
         position = p;
@@ -77,7 +80,7 @@ public class Ball {
         if (!inPossession) {
             // calculate acceleration = -v/3
             Vector2d acceleration = new Vector2d(velocity);
-            acceleration.scale(-1 / 3f);
+            acceleration.scale(-decelerationFactor);
 
             // apply acceleration to velocity
             acceleration.scale(deltaTime / 1000f);

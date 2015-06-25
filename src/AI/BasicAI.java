@@ -11,13 +11,12 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class BasicAI implements AI{
-    // store the pitch
+
     private Pitch pitch;
-    // stores the team most recently given to the AI
+    // if a new team is given to the AI,
+    // it is stored here until the AI is ready to update the team
     private Team newTeam;
-    // store the team
     private Team team;
-    // store the players
     private List<Player> players;
 
     @Override
@@ -48,79 +47,112 @@ public class BasicAI implements AI{
             // update the players
             players = team.getCopyOfPlayers();
 
-            updateGoalKeeper();
-            updatePlayers();
+            setGoalKeeperGoalPosition();
+            // updatePlayers();
         }
     }
 
-    private void updateGoalKeeper() {
-        Vector2d ballPosition = pitch.getBallPosition();
-        Vector2d goalPosition = new Vector2d();
-
+    private void setGoalKeeperGoalPosition() {
         if (pitch.ballIsInPossession()) {
-            double angle = new Vector2d(0,-1).angle(new Vector2d(ballPosition.getX()-Pitch.width/2,ballPosition.getY()));
-            double goalPositionY = Math.cos(angle)*Pitch.goalWidth/2;
-            double goalPositionX = Math.sin(angle)*Pitch.goalWidth/2;
-            goalPosition = new Vector2d(Pitch.width/2-goalPositionX,-goalPositionY);
+            setGoalKeeperGoalPositionInPossession();
         } else {
-            Player goalKeeper = players.get(team.getGoalKeeperID());
-            double v = goalKeeper.getMaxVelocity(); // max goalKeeper velocity
-            double k = 3 * pitch.getBallVelocity().length();
-            double b = distanceFromPlayerToBall(team.getGoalKeeperID());
-            double A = angleBetweenBallDirectionAndPlayer(team.getGoalKeeperID());
-            double upperBound = k;
-            double lowerBound = 0;
-            double x = k/2; // distance the ball will travel until interception
-            for (int i = 0; i < 10; i++) {
-                // time for player to reach intersection point minus time for ball to reach intersection point
-                double d =  Math.pow(b,2) + Math.pow(x,2) - 2*b*x*Math.cos(A)
-                        - Math.pow(3*v*(Math.log(k) - Math.log(k-x)),2);
-                if (d >= 0) {
-                    lowerBound = x;
-                } else {
-                    upperBound = x;
-                }
-                x = (upperBound + lowerBound) / 2;
+            setGoalKeeperGoalPositionNotInPossession();
+        }
+    }
+
+    // if the ball is in possession, the goal keeper will remain goalWidth/2 distance away from the centre of the goal
+    // and will remain between the ball and the centre of the goal
+    private void setGoalKeeperGoalPositionInPossession() {
+        Vector2d ballPosition = pitch.getBallPosition();
+
+        double xGoalLine = Pitch.width/2;
+        if (players.get(team.getGoalKeeperID()).getPosition().getX() < 0) { xGoalLine = -xGoalLine; }
+
+        Vector2d goalCentreToBall = new Vector2d(ballPosition.getX()-xGoalLine,ballPosition.getY());
+        goalCentreToBall.add(pitch.getBallVelocity());
+
+        double angle = new Vector2d(0,-1).angle(goalCentreToBall);
+        double yOffset = Math.cos(angle)*Pitch.goalWidth/2;
+        double xOffset = Math.sin(angle)*Pitch.goalWidth/2;
+
+        double xGoalPosition = xGoalLine-xOffset;
+        double yGoalPosition = -yOffset;
+
+        team.setPlayerGoalPosition(team.getGoalKeeperID(),new Vector2d(xGoalPosition,yGoalPosition));
+    }
+
+    // if the ball is not in possession, try to intercept it at the earliest possible point.
+    private void setGoalKeeperGoalPositionNotInPossession() {
+        interceptBall(team.getGoalKeeperID());
+    }
+
+    private void interceptBall(int playerID) {
+        Vector2d intersectionPoint = findIntersectionPoint(playerID);
+
+        // make the player run past the interception point
+        // player intercepts the ball at full speed
+        Vector2d runDirection = new Vector2d(intersectionPoint);
+        runDirection.sub(players.get(playerID).getPosition());
+        runDirection.normalize();
+        runDirection.scale(20.0);
+        intersectionPoint.add(runDirection);
+
+        team.setPlayerGoalPosition(playerID,intersectionPoint);
+    }
+
+
+    private Vector2d findIntersectionPoint(int playerID) {
+
+        // calculate minimum distance the ball will travel before the player is able to reach it
+        double lowerBound = 0;
+        // maximum possible distance the ball can travel with a = -v/3 is 3 * ball velocity
+        double upperBound = 3 * pitch.getBallVelocity().length();
+        double x = (upperBound + lowerBound) / 2;
+
+        for (int i = 0; i < 10; i++) {
+            Double ballTime = findBallTime(x);
+            Double playerTime = findPlayerTime(x, playerID);
+            if (playerTime >= ballTime) {
+                lowerBound = x;
+            } else {
+                upperBound = x;
             }
-
-            // find the intersection point
-            Vector2d interPoint = pitch.getBallVelocity();
-            interPoint.normalize();
-            interPoint.scale(x);
-            interPoint.add(pitch.getBallPosition());
-
-            // find the running direction
-            Vector2d runDirection = new Vector2d(interPoint);
-            runDirection.sub(players.get(team.getGoalKeeperID()).getPosition());
-            runDirection.normalize();
-
-            // make the player run past the interception point
-            // player intercepts the ball at full speed
-            runDirection.scale(20.0);
-            interPoint.add(runDirection);
-
-            goalPosition = interPoint;
-
-            // find best interception point and get there asap
-
-            // for ball, t = 3(ln(k) - ln(k-x))
-                // k >= x
-                // where k = ballSpeed / (20 * (1 - e^(-1/60)))
-                // this means k is the max range of the ball
-
-            // d = ( b^2 + x^2 - 2bx*cos(A) )^(1/2)
-            // where b = distance from player to ball
-
-            // as the time to get to top speed is quite small (max 1.3s), we can assume player is running at full speed
-                // t = ( b^2 + x^2 - 2bx*cos(A) )^(1/2) / v
-
-            // setting the two to be equal
-                // 3(ln(k) - ln(k-x)) = ( b^2 + x^2 - 2bx*cos(A) )^(1/2) / v
-                // (3v(ln(k) - ln(k-x)))^2 = b^2 + x^2 - 2bx*cos(A)
-
+            x = (upperBound + lowerBound) / 2;
         }
 
-        team.setPlayerGoalPosition(team.getGoalKeeperID(),goalPosition);
+        // calculate point x distance from the ball in the direction of travel
+        Vector2d interPoint = pitch.getBallVelocity();
+        interPoint.normalize();
+        interPoint.scale(x);
+        interPoint.add(pitch.getBallPosition());
+
+        System.out.println("Sum " + interPoint.x + " " + interPoint.y);
+
+        return interPoint;
+    }
+
+    private double findBallTime(double x) {
+        // time taken for ball to travel x distance is t = -3ln(1 - x/3u)
+        // where u is the initial velocity of the ball
+
+        return -3 * Math.log(1 - (x / (3 * pitch.getBallVelocity().length())));
+    }
+
+    private double findPlayerTime(double x, int playerID) {
+        // time taken for player to reach a ball that has travelled distance x is
+        // t = √(x^2+p^2+2x*p*cos(∝))/v
+        // where p is the distance between the player and the ball and
+        // where alpha is the angle at the ball between the player and the intersection and
+        // where v is the maximum velocity of the player
+        // this assumes that the player is already at maximum velocity in the correct direction
+
+        Vector2d ballToPlayer = new Vector2d(team.getPlayerPosition(playerID));
+        ballToPlayer.sub(pitch.getBallPosition());
+        double p = ballToPlayer.length();
+        double alpha = ballToPlayer.angle(pitch.getBallVelocity());
+        double v = players.get(playerID).getMaxVelocity();
+
+        return Math.sqrt(x*x + p*p - 2*x*p*Math.cos(alpha)) / v;
     }
 
     private void updatePlayers() {
