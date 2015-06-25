@@ -48,7 +48,7 @@ public class BasicAI implements AI{
             players = team.getCopyOfPlayers();
 
             setGoalKeeperGoalPosition();
-            // updatePlayers();
+            updatePlayers();
         }
     }
 
@@ -262,44 +262,11 @@ public class BasicAI implements AI{
 
         } else {
             // intercept the ball
-
             for (Player p: players) {
-                double v = p.getMaxVelocity();
-                double k = 3 * pitch.getBallVelocity().length();
-                double b = distanceFromPlayerToBall(p.getPlayerID());
-                double A = angleBetweenBallDirectionAndPlayer(p.getPlayerID());
-                double upperBound = k;
-                double lowerBound = 0;
-                double x = k/2; // distance the ball will travel until interception
-                for (int i = 0; i < 10; i++) {
-                    // time for player to reach intersection point minus time for ball to reach intersection point
-                    double d =  Math.pow(b,2) + Math.pow(x,2) - 2*b*x*Math.cos(A)
-                            - Math.pow(3*v*(Math.log(k) - Math.log(k-x)),2);
-                    if (d >= 0) {
-                        lowerBound = x;
-                    } else {
-                        upperBound = x;
-                    }
-                    x = (upperBound + lowerBound) / 2;
+                int playerID = p.getPlayerID();
+                if (playerID != team.getGoalKeeperID()) {
+                    interceptBall(playerID);
                 }
-
-                // find the intersection point
-                Vector2d interPoint = pitch.getBallVelocity();
-                interPoint.normalize();
-                interPoint.scale(x);
-                interPoint.add(pitch.getBallPosition());
-
-                // find the running direction
-                Vector2d runDirection = new Vector2d(interPoint);
-                runDirection.sub(p.getPosition());
-                runDirection.normalize();
-
-                // make the player run past the interception point
-                // player intercepts the ball at full speed
-                runDirection.scale(20.0);
-                interPoint.add(runDirection);
-
-                team.setPlayerGoalPosition(p.getPlayerID(), interPoint);
             }
         }
     }
