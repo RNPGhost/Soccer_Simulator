@@ -41,6 +41,7 @@ public class MouseInput extends MouseAdapter {
     public void mouseReleased(MouseEvent e) {
         if (e.getButton() == KeyBinding.kickBall) {
             AI.kickBall(e.getPoint());
+            AI.interceptBall();
         }
     }
 }

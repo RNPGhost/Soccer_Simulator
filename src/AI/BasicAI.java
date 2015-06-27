@@ -57,12 +57,24 @@ public class BasicAI implements AI {
 
     private void setGoalKeeperGoalPosition() {
         if (pitch.ballIsInPossession()) {
-            setGoalKeeperGoalPositionInPossession();
+            if (team.getPlayerPosition(team.getGoalKeeperID()).getX() > 0
+                    && Pitch.insideRightPenaltyBox(pitch.getBallPosition())
+                    || team.getPlayerPosition(team.getGoalKeeperID()).getX() < 0
+                    && Pitch.insideLeftPenaltyBox(pitch.getBallPosition())) {
+                setGoalKeeperGoalPositionBallInBox();
+            } else {
+                setGoalKeeperGoalPositionInPossession();
+            }
         } else {
             setGoalKeeperGoalPositionNotInPossession();
         }
     }
 
+    private void setGoalKeeperGoalPositionBallInBox() {
+        // if the ball is in the box, try to intercept it at the earliest possible point
+
+        interceptBall(team.getGoalKeeperID());
+    }
 
     private void setGoalKeeperGoalPositionInPossession() {
         // if the ball is in possession,
@@ -180,7 +192,70 @@ public class BasicAI implements AI {
     }
 
     private void setPlayerGoalPositionsInPossession() {
-        return;
+        // for all players who aren't the ball possessor
+        // spread out
+
+        for (Player player: players) {
+            if (player.getPlayerID() != pitch.getBallPossessorPlayerID()) {
+                spreadOut(player);
+            } else {
+                setPlayerGoalPositionsBallPossessor(player);
+            }
+        }
+    }
+
+    private void setPlayerGoalPositionsBallPossessor(Player player) {
+
+    }
+
+    private void spreadOut(Player player) {
+        // send player to the centre of the circumcircle of the 3 closest defenders
+
+        List<Player> opponents = pitch.getCopyOfPlayers(getOpponentID());
+
+        if (opponents.size() < 3) { return; }
+
+        Player defender1 = findAndRemoveNearest(opponents, player);
+        Player defender2 = findAndRemoveNearest(opponents, player);
+        Player defender3 = findAndRemoveNearest(opponents, player);
+
+        Vector2d def1ToDef2 = new Vector2d(defender2.getPosition());
+        def1ToDef2.sub(defender1.getPosition());
+        Vector2d def1ToDef2Normal = new Vector2d(def1ToDef2.getY(),-def1ToDef2.getX());
+        Vector2d centreOfDef1AndDef2 = new Vector2d(defender1.getPosition());
+        centreOfDef1AndDef2.add(defender2.getPosition());
+        centreOfDef1AndDef2.scale(0.5);
+
+        Vector2d def2ToDef3 = new Vector2d(defender3.getPosition());
+        def2ToDef3.sub(defender2.getPosition());
+        Vector2d def2ToDef3Normal = new Vector2d(def2ToDef3.getY(),-def2ToDef3.getX());
+        Vector2d centreOfDef2AndDef3 = new Vector2d(defender2.getPosition());
+        centreOfDef2AndDef3.add(defender3.getPosition());
+        centreOfDef2AndDef3.scale(0.5);
+
+        team.setPlayerGoalPosition(player.getPlayerID(), getIntersectionPoint(
+                centreOfDef1AndDef2, def1ToDef2Normal, centreOfDef2AndDef3, def2ToDef3Normal));
+
+    }
+
+    private Vector2d getIntersectionPoint(Vector2d p1, Vector2d g1, Vector2d p2, Vector2d g2) {
+        // finds the intersection point between two lines
+
+        // l1 = p1 + t*g1
+        // l2 = p2 + s*g2
+
+        // find t
+        double t = (( g2.x * (p1.y - p2.y) + g2.y * (p2.x - p1.x) ) / ( (g1.x * g2.y) - (g2.x * g1.y) ));
+
+        // plug t into the equation for l1
+        return new Vector2d(p1.x + t * g1.x,p1.y + t * g1.y);
+    }
+
+    private Player findAndRemoveNearest(List<Player> players, Player player) {
+        Player nearest = findNearest(players,player);
+        players.remove(nearest);
+
+        return nearest;
     }
 
     private void setPlayerGoalPositionsEnemyInPossession() {
@@ -219,28 +294,31 @@ public class BasicAI implements AI {
 
     private void mark(List<Player> players, Player mark) {
         // mark the player using one of the players in the list
+        // if the mark has the ball, go for the ball
 
         if (players.size() == 0) { return; }
 
-        Player defender = findNearest(players, mark);
+        Player defender = findAndRemoveNearest(players, mark);
 
-        players.remove(defender);
+        if (mark.getPlayerID() == pitch.getBallPossessorPlayerID()) {
+            interceptBall(defender.getPlayerID());
+        } else {
+            // find the vector from the mark to the ball
+            Vector2d markToBall = pitch.getBallPosition();
+            markToBall.sub(mark.getPosition());
+            if (markToBall.length() > 0.01) {
+                markToBall.normalize();
+                markToBall.scale(20);
+            }
 
-        // find the vector from the mark to the ball
-        Vector2d markToBall = pitch.getBallPosition();
-        markToBall.sub(mark.getPosition());
-        if (markToBall.length() > 0.01) {
-            markToBall.normalize();
-            markToBall.scale(20);
+            // mark the target towards the ball in the direction the target is running
+            Vector2d markingPosition = mark.getVelocity();
+            markingPosition.scale(2); // works well in practice
+            markingPosition.add(mark.getPosition());
+            markingPosition.add(markToBall);
+
+            team.setPlayerGoalPosition(defender.getPlayerID(),markingPosition);
         }
-
-        // mark the target towards the ball in the direction the target is running
-        Vector2d markingPosition = mark.getVelocity();
-        markingPosition.scale(2); // works well in practice
-        markingPosition.add(mark.getPosition());
-        markingPosition.add(markToBall);
-
-        team.setPlayerGoalPosition(defender.getPlayerID(),markingPosition);
     }
 
     private Player findNearest(List<Player> players, Player player) {
