@@ -1,8 +1,8 @@
 package Main;
 
 import AI.AI;
-import AI.BasicAI;
 import AI.MouseInputAI;
+import AI.BasicAI;
 import Graphics.PitchDrawingFrame;
 import Graphics.Tools;
 
@@ -24,17 +24,15 @@ public class Game {
         // initialise the canvas
         Tools.initialiseCanvas(pdFrame);
 
-        // create team 1's AI
         AI mouseInputAI = new MouseInputAI();
-
-        // create team 2's AI
-        AI basicAI = new BasicAI();
+        AI basicAI1 = new BasicAI();
+        AI basicAI2 = new BasicAI();
 
         // create a ball
         Ball ball = new Ball(new Vector2d(0,0),new Vector2d(0,0));
 
         // create a pitch to play on
-        pitch = new Pitch(mouseInputAI,basicAI,ball);
+        pitch = new Pitch(basicAI1,basicAI2,ball);
 
         // give the pitch and ball to the drawing frame
         pdFrame.initialise(pitch,ball);

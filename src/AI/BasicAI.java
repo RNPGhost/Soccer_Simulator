@@ -1,9 +1,6 @@
 package AI;
 
-import Main.Goalkeeper;
-import Main.Pitch;
-import Main.Player;
-import Main.Team;
+import Main.*;
 
 import javax.vecmath.Vector2d;
 import java.util.*;
@@ -86,10 +83,7 @@ public class BasicAI implements AI {
 
         Vector2d ballPosition = pitch.getBallPosition();
 
-        double xGoalLine = Pitch.width / 2;
-        if (leftSideOfPitch) {
-            xGoalLine = -xGoalLine;
-        }
+        double xGoalLine = (leftSideOfPitch ? -Pitch.width/2 : Pitch.width / 2);
 
         Vector2d goalCentreToBall = new Vector2d(ballPosition.getX() - xGoalLine, ballPosition.getY());
         goalCentreToBall.add(pitch.getBallVelocity());
@@ -97,8 +91,9 @@ public class BasicAI implements AI {
         double angle = new Vector2d(0, -1).angle(goalCentreToBall);
         double yOffset = Math.cos(angle) * Pitch.goalWidth / 2;
         double xOffset = Math.sin(angle) * Pitch.goalWidth / 2;
+        if (!leftSideOfPitch) { xOffset = -xOffset; }
 
-        double xGoalPosition = xGoalLine - xOffset;
+        double xGoalPosition = xGoalLine + xOffset;
         double yGoalPosition = -yOffset;
 
         team.setPlayerGoalPosition(team.getGoalKeeperID(), new Vector2d(xGoalPosition, yGoalPosition));
@@ -214,13 +209,20 @@ public class BasicAI implements AI {
     }
 
     private void tryPassing(Player player) {
-        // player tries to pass the ball to any member of his team
+        // player tries to pass the ball to anyone on his team who is closer to the enemy goal
 
         List<Player> orderedPlayers = new ArrayList<Player>(players);
-        orderedPlayers.remove(player);
         orderedPlayers = sortByClosestToEnemyGoal(orderedPlayers);
 
-        tryToPass(player, orderedPlayers);
+        int playerIndex = orderedPlayers.indexOf(player);
+        List<Player> closerPlayers = orderedPlayers.subList(0,playerIndex);
+        List<Player> furtherPlayers = orderedPlayers.subList(playerIndex + 1, orderedPlayers.size());
+
+        if (!tryToPass(player, closerPlayers)) {
+            if (!tryToMove(player)) {
+                tryToPass(player, furtherPlayers);
+            }
+        }
     }
 
     private List<Player> sortByClosestToEnemyGoal(List<Player> teamMates) {
@@ -237,28 +239,31 @@ public class BasicAI implements AI {
         return teamMates;
     }
 
-    private void tryToPass(Player player, List<Player> receivers) {
+    private boolean tryToPass(Player player, List<Player> receivers) {
         for (Player p: receivers) {
             if (makePass(player, p)) {
-                return;
+                return true;
             }
         }
+        return false;
+    }
+
+    private boolean tryToMove(Player player) {
+        // if not a stationary player, run at the enemy goal
+        // eventually will check whether is it safe to move forward
+        if (player instanceof StationaryPlayer) { return false; }
+
+        Vector2d goal = new Vector2d(leftSideOfPitch ? Pitch.width/2 : -Pitch.width/2, 0);
+        team.setPlayerGoalPosition(player.getPlayerID(),goal);
+        return true;
     }
 
     private boolean makePass(Player a, Player b) {
-        // only pass when b is in front of a
-        // return true iff pass successful
-        double aXPosition = a.getPosition().getX();
-        double bXPosition = b.getPosition().getX();
+        // always make the pass
+        // eventually, will check to make sure pass cannot be intercepted
 
-        if ((!leftSideOfPitch
-                && aXPosition >= bXPosition)
-                || (leftSideOfPitch
-                && aXPosition <= bXPosition)) {
-            pass(a,b);
-            return true;
-        }
-        return false;
+        pass(a,b);
+        return true;
     }
 
     private void pass(Player a, Player b) {
