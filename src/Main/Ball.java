@@ -63,6 +63,8 @@ public class Ball {
 
     public double getDecelerationFactor() { return decelerationFactor; }
 
+    public double getMaxVelocity() { return maxVelocity; }
+
     public synchronized void setPosition(Vector2d p) {
         inPossession = false;
         position = p;

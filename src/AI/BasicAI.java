@@ -6,10 +6,7 @@ import Main.Player;
 import Main.Team;
 
 import javax.vecmath.Vector2d;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 public class BasicAI implements AI {
 
@@ -19,6 +16,7 @@ public class BasicAI implements AI {
     private Team newTeam;
     private Team team;
     private List<Player> players;
+    private boolean leftSideOfPitch;
 
     @Override
     public void updateTeam(Team t) {
@@ -46,6 +44,7 @@ public class BasicAI implements AI {
             if (newTeam != team) {
                 team = newTeam;
                 pitch = team.getPitch();
+                leftSideOfPitch = setPitchSide();
             }
             // update the players
             players = team.getCopyOfPlayers();
@@ -55,12 +54,16 @@ public class BasicAI implements AI {
         }
     }
 
+    public boolean setPitchSide() {
+        return (team.getPlayerPosition(team.getGoalKeeperID()).getX() < 0);
+    }
+
     private void setGoalKeeperGoalPosition() {
         if (pitch.ballIsInPossession()) {
-            if (team.getPlayerPosition(team.getGoalKeeperID()).getX() > 0
-                    && Pitch.insideRightPenaltyBox(pitch.getBallPosition())
-                    || team.getPlayerPosition(team.getGoalKeeperID()).getX() < 0
-                    && Pitch.insideLeftPenaltyBox(pitch.getBallPosition())) {
+            if ((leftSideOfPitch &&
+                    Pitch.insideLeftPenaltyBox(pitch.getBallPosition()))
+                    || (!leftSideOfPitch &&
+                    Pitch.insideRightPenaltyBox(pitch.getBallPosition()))) {
                 setGoalKeeperGoalPositionBallInBox();
             } else {
                 setGoalKeeperGoalPositionInPossession();
@@ -84,7 +87,7 @@ public class BasicAI implements AI {
         Vector2d ballPosition = pitch.getBallPosition();
 
         double xGoalLine = Pitch.width / 2;
-        if (players.get(team.getGoalKeeperID()).getPosition().getX() < 0) {
+        if (leftSideOfPitch) {
             xGoalLine = -xGoalLine;
         }
 
@@ -124,6 +127,8 @@ public class BasicAI implements AI {
 
     private Vector2d findIntersectionPoint(int playerID) {
         // calculate minimum distance the ball will travel before the player is able to reach it
+
+        if (pitch.getBallVelocity().length() < 0.1) { return pitch.getBallPosition(); }
 
         double lowerBound = 0;
         // maximum possible distance the ball can travel with a = -v/3 is 3 * ball velocity
@@ -205,7 +210,64 @@ public class BasicAI implements AI {
     }
 
     private void setPlayerGoalPositionsBallPossessor(Player player) {
+        tryPassing(player);
+    }
 
+    private void tryPassing(Player player) {
+        // player tries to pass the ball to any member of his team
+
+        List<Player> orderedPlayers = new ArrayList<Player>(players);
+        orderedPlayers.remove(player);
+        orderedPlayers = sortByClosestToEnemyGoal(orderedPlayers);
+
+        tryToPass(player, orderedPlayers);
+    }
+
+    private List<Player> sortByClosestToEnemyGoal(List<Player> teamMates) {
+        final Vector2d goal = new Vector2d(leftSideOfPitch ? Pitch.width/2 : -Pitch.width/2, 0);
+
+        teamMates.sort(new Comparator<Player>() {
+            public int compare(Player a, Player b) {
+                Vector2d aToGoal = new Vector2d(goal); aToGoal.sub(a.getPosition()); double distA = aToGoal.length();
+                Vector2d bToGoal = new Vector2d(goal); bToGoal.sub(b.getPosition()); double distB = bToGoal.length();
+                return Double.compare(distA, distB);
+            }
+        });
+
+        return teamMates;
+    }
+
+    private void tryToPass(Player player, List<Player> receivers) {
+        for (Player p: receivers) {
+            if (makePass(player, p)) {
+                return;
+            }
+        }
+    }
+
+    private boolean makePass(Player a, Player b) {
+        // only pass when b is in front of a
+        // return true iff pass successful
+        double aXPosition = a.getPosition().getX();
+        double bXPosition = b.getPosition().getX();
+
+        if ((!leftSideOfPitch
+                && aXPosition >= bXPosition)
+                || (leftSideOfPitch
+                && aXPosition <= bXPosition)) {
+            pass(a,b);
+            return true;
+        }
+        return false;
+    }
+
+    private void pass(Player a, Player b) {
+        // NOTE TO SELF: must create better passing algorithm
+        Vector2d kickDirection = b.getPosition();
+        kickDirection.sub(a.getPosition());
+        kickDirection.add(b.getVelocity());
+
+        team.kickBall(kickDirection);
     }
 
     private void spreadOut(Player player) {
@@ -264,7 +326,7 @@ public class BasicAI implements AI {
 
         int opponentID = getOpponentID();
         List<Player> opponents = pitch.getCopyOfPlayers(opponentID);
-        List<Player> playersCopy = team.getCopyOfPlayers();
+        List<Player> playersCopy = new ArrayList<Player>(players);
 
         playersCopy = removeGoalKeepers(playersCopy);
 
@@ -292,13 +354,13 @@ public class BasicAI implements AI {
         return newPlayers;
     }
 
-    private void mark(List<Player> players, Player mark) {
+    private void mark(List<Player> defenders, Player mark) {
         // mark the player using one of the players in the list
         // if the mark has the ball, go for the ball
 
-        if (players.size() == 0) { return; }
+        if (defenders.size() == 0) { return; }
 
-        Player defender = findAndRemoveNearest(players, mark);
+        Player defender = findAndRemoveNearest(defenders, mark);
 
         if (mark.getPlayerID() == pitch.getBallPossessorPlayerID()) {
             interceptBall(defender.getPlayerID());

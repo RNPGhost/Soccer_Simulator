@@ -468,6 +468,8 @@ public class Pitch {
         }
     }
 
+    public double getBallMaxVelocity() { return ball.getMaxVelocity(); }
+
     public Vector2d getPlayerPosition(int teamID, int playerID) {
         if (team1.getTeamID() == teamID) {
             return team1.getPlayerPosition(playerID);
