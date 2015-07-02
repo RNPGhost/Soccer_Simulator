@@ -219,7 +219,7 @@ public class BasicAI implements AI {
         List<Player> furtherPlayers = orderedPlayers.subList(playerIndex + 1, orderedPlayers.size());
 
         if (!tryToPass(player, closerPlayers)) {
-            if (!tryToMove(player)) {
+            if (!tryToRunAtGoal(player)) {
                 tryToPass(player, furtherPlayers);
             }
         }
@@ -240,6 +240,10 @@ public class BasicAI implements AI {
     }
 
     private boolean tryToPass(Player player, List<Player> receivers) {
+        if (receivers.size() > 2) {
+            System.out.println(receivers.size() + " receivers");
+        }
+
         for (Player p: receivers) {
             if (makePass(player, p)) {
                 return true;
@@ -248,10 +252,11 @@ public class BasicAI implements AI {
         return false;
     }
 
-    private boolean tryToMove(Player player) {
+    private boolean tryToRunAtGoal(Player player) {
         // if not a stationary player, run at the enemy goal
         // eventually will check whether is it safe to move forward
-        if (player instanceof StationaryPlayer) { return false; }
+        if (player instanceof StationaryPlayer
+                || player instanceof Goalkeeper) { return false; }
 
         Vector2d goal = new Vector2d(leftSideOfPitch ? Pitch.width/2 : -Pitch.width/2, 0);
         team.setPlayerGoalPosition(player.getPlayerID(),goal);
@@ -276,7 +281,7 @@ public class BasicAI implements AI {
     }
 
     private void spreadOut(Player player) {
-        // send player to the centre of the circumcircle of the 3 closest defenders
+        // send player to the centre of the triangle of the 3 closest defenders
 
         List<Player> opponents = pitch.getCopyOfPlayers(getOpponentID());
 
@@ -286,22 +291,23 @@ public class BasicAI implements AI {
         Player defender2 = findAndRemoveNearest(opponents, player);
         Player defender3 = findAndRemoveNearest(opponents, player);
 
-        Vector2d def1ToDef2 = new Vector2d(defender2.getPosition());
-        def1ToDef2.sub(defender1.getPosition());
-        Vector2d def1ToDef2Normal = new Vector2d(def1ToDef2.getY(),-def1ToDef2.getX());
-        Vector2d centreOfDef1AndDef2 = new Vector2d(defender1.getPosition());
-        centreOfDef1AndDef2.add(defender2.getPosition());
-        centreOfDef1AndDef2.scale(0.5);
 
-        Vector2d def2ToDef3 = new Vector2d(defender3.getPosition());
-        def2ToDef3.sub(defender2.getPosition());
-        Vector2d def2ToDef3Normal = new Vector2d(def2ToDef3.getY(),-def2ToDef3.getX());
-        Vector2d centreOfDef2AndDef3 = new Vector2d(defender2.getPosition());
-        centreOfDef2AndDef3.add(defender3.getPosition());
-        centreOfDef2AndDef3.scale(0.5);
+        Vector2d centreOf1And2 = new Vector2d(defender1.getPosition());
+        centreOf1And2.add(defender2.getPosition());
+        centreOf1And2.scale(0.5);
+
+        Vector2d centreOf1And2To3 = new Vector2d(defender3.getPosition());
+        centreOf1And2To3.sub(centreOf1And2);
+
+        Vector2d centreOf2And3 = new Vector2d(defender2.getPosition());
+        centreOf2And3.add(defender3.getPosition());
+        centreOf2And3.scale(0.5);
+
+        Vector2d centreOf2And3To1 = new Vector2d(defender1.getPosition());
+        centreOf2And3To1.sub(centreOf2And3);
 
         team.setPlayerGoalPosition(player.getPlayerID(), getIntersectionPoint(
-                centreOfDef1AndDef2, def1ToDef2Normal, centreOfDef2AndDef3, def2ToDef3Normal));
+                centreOf1And2, centreOf1And2To3, centreOf2And3, centreOf2And3To1));
 
     }
 
