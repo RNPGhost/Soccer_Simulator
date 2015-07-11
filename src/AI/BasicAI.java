@@ -248,7 +248,7 @@ public class BasicAI implements AI {
         Vector2d distanceToGoal = new Vector2d(goalXPos, 0);
         distanceToGoal.sub(player.getPosition());
 
-        if (waitUntilClose && distanceToGoal.length() > 300) { return false; }
+        if (waitUntilClose && distanceToGoal.length() > 200) { return false; }
 
         Vector2d topPost = new Vector2d(goalXPos, Pitch.goalWidth/2);
         Vector2d bottomPost = new Vector2d(goalXPos, -Pitch.goalWidth/2);
@@ -419,24 +419,8 @@ public class BasicAI implements AI {
         return nearest;
     }
 
-    private Vector2d getIntersectionPoint(Vector2d p1, Vector2d g1, Vector2d p2, Vector2d g2) {
-        // finds the intersection point between two lines
-
-        // l1 = p1 + t*g1
-        // l2 = p2 + s*g2
-
-        // find t
-        double t = (( g2.x * (p1.y - p2.y) + g2.y * (p2.x - p1.x) ) / ( (g1.x * g2.y) - (g2.x * g1.y) ));
-
-        // plug t into the equation for l1
-        return new Vector2d(p1.x + t * g1.x,p1.y + t * g1.y);
-    }
-
     private Player findAndRemoveNearest(List<Player> players, Player player) {
-        Player nearest = findNearest(players,player);
-        players.remove(nearest);
-
-        return nearest;
+        return findAndRemoveNearest(players, player.getPosition());
     }
 
     private void setPlayerGoalPositionsEnemyInPossession() {
@@ -502,25 +486,6 @@ public class BasicAI implements AI {
         }
     }
 
-    private Player findNearest(List<Player> players, Player player) {
-        double distance = Double.POSITIVE_INFINITY;
-        Player nearest = null;
-        Vector2d playerPosition = player.getPosition();
-
-        for (Player p: players) {
-            Vector2d direction = p.getPosition();
-            direction.sub(playerPosition);
-            double newDistance = direction.length();
-            if (newDistance < distance) {
-                distance = newDistance;
-                nearest = p;
-            }
-        }
-
-        return nearest;
-    }
-
-
     private void setPlayerGoalPositionsNotInPossession() {
         // CHANGE SO THAT ONLY THE CLOSEST PLAYER TO THEIR INTERCEPTION POINT INTERCEPTS THE BALL
 
@@ -530,5 +495,20 @@ public class BasicAI implements AI {
                 interceptBall(playerID);
             }
         }
+
+        List<Player> newPlayers = new ArrayList<Player>(players);
+        newPlayers.remove(players.get(team.getGoalKeeperID()));
+
+        Player oldPlayer = null;
+        Player newPlayer = newPlayers.get(0);
+        while (oldPlayer != newPlayer) {
+            oldPlayer = newPlayer;
+            newPlayer = findNearest(newPlayers,findIntersectionPoint(oldPlayer.getPlayerID()));
+        }
+
+        interceptBall(newPlayer.getPlayerID());
+        newPlayers.remove(newPlayer);
+
+        spreadOut(newPlayers);
     }
 }
