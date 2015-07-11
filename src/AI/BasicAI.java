@@ -195,13 +195,13 @@ public class BasicAI implements AI {
         // for all players who aren't the ball possessor
         // spread out
 
-        for (Player player: players) {
-            if (player.getPlayerID() != pitch.getBallPossessorPlayerID()) {
-                spreadOut(player);
-            } else {
-                setPlayerGoalPositionsBallPossessor(player);
-            }
-        }
+        List<Player> newPlayers = new ArrayList<Player>(players);
+        Player ballPossessor = newPlayers.get(pitch.getBallPossessorPlayerID());
+        setPlayerGoalPositionsBallPossessor(ballPossessor);
+        newPlayers.remove(ballPossessor);
+        newPlayers.remove(team.getGoalKeeperID());
+
+        spreadOut(newPlayers);
     }
 
     private void setPlayerGoalPositionsBallPossessor(Player player) {
@@ -372,42 +372,51 @@ public class BasicAI implements AI {
         return false;
     }
 
-    private void spreadOut(Player player) {
-        // send player to the centre of the triangle of the 3 closest defenders
+    private void spreadOut(List<Player> players) {
+        int xMultiplier = (leftSideOfPitch ? 1 : -1);
 
-        List<Player> opponents = pitch.getCopyOfPlayers(getOpponentID());
-        opponents.add(0, players.get(team.getGoalKeeperID()));
-        opponents.add(new Player(11, new Vector2d(0,Pitch.height/2),new Vector2d(0,0),new Vector2d(0,0)));
-        opponents.add(new Player(12, new Vector2d(0,-Pitch.height/2),new Vector2d(0,0),new Vector2d(0,0)));
-        opponents.add(new Player(13, new Vector2d(Pitch.width/2,Pitch.height/2),new Vector2d(0,0),new Vector2d(0,0)));
-        opponents.add(new Player(14, new Vector2d(Pitch.width/2,-Pitch.height/2),new Vector2d(0,0),new Vector2d(0,0)));
-        opponents.add(new Player(15, new Vector2d(-Pitch.width/2,Pitch.height/2),new Vector2d(0,0),new Vector2d(0,0)));
-        opponents.add(new Player(16, new Vector2d(-Pitch.width/2,-Pitch.height/2),new Vector2d(0,0),new Vector2d(0,0)));
+        List<Vector2d> formation = new ArrayList<Vector2d>();
+        // attackers
+        formation.add(0, new Vector2d(xMultiplier * Pitch.width/3,Pitch.height/6));
+        formation.add(1, new Vector2d(xMultiplier * Pitch.width/3,-Pitch.height/6));
+        // midfield
+        formation.add(2, new Vector2d(xMultiplier * Pitch.width/6,Pitch.height/3));
+        formation.add(3, new Vector2d(xMultiplier * Pitch.width/6,-Pitch.height/3));
+        formation.add(4, new Vector2d(0,0));
+        // defenders
+        formation.add(5, new Vector2d(xMultiplier * -Pitch.width/6, Pitch.height/3));
+        formation.add(6, new Vector2d(xMultiplier * -Pitch.width/6, -Pitch.height/3));
+        formation.add(7, new Vector2d(xMultiplier * -Pitch.width/3, Pitch.height/6));
+        formation.add(8, new Vector2d(xMultiplier * -Pitch.width/3, -Pitch.height/6));
 
-        if (opponents.size() < 3) { return; }
+        for (Vector2d v: formation) {
+            Player player = findAndRemoveNearest(players, v);
+            team.setPlayerGoalPosition(player.getPlayerID(), v);
+        }
+    }
 
-        Player defender1 = findAndRemoveNearest(opponents, player);
-        Player defender2 = findAndRemoveNearest(opponents, player);
-        Player defender3 = findAndRemoveNearest(opponents, player);
+    private Player findAndRemoveNearest(List<Player> players, Vector2d position) {
+        Player nearest = findNearest(players, position);
+        players.remove(nearest);
 
+        return nearest;
+    }
 
-        Vector2d centreOf1And2 = new Vector2d(defender1.getPosition());
-        centreOf1And2.add(defender2.getPosition());
-        centreOf1And2.scale(0.5);
+    private Player findNearest(List<Player> players, Vector2d position) {
+        double distance = Double.POSITIVE_INFINITY;
+        Player nearest = null;
 
-        Vector2d centreOf1And2To3 = new Vector2d(defender3.getPosition());
-        centreOf1And2To3.sub(centreOf1And2);
+        for (Player p: players) {
+            Vector2d direction = p.getPosition();
+            direction.sub(position);
+            double newDistance = direction.length();
+            if (newDistance < distance) {
+                distance = newDistance;
+                nearest = p;
+            }
+        }
 
-        Vector2d centreOf2And3 = new Vector2d(defender2.getPosition());
-        centreOf2And3.add(defender3.getPosition());
-        centreOf2And3.scale(0.5);
-
-        Vector2d centreOf2And3To1 = new Vector2d(defender1.getPosition());
-        centreOf2And3To1.sub(centreOf2And3);
-
-        team.setPlayerGoalPosition(player.getPlayerID(), getIntersectionPoint(
-                centreOf1And2, centreOf1And2To3, centreOf2And3, centreOf2And3To1));
-
+        return nearest;
     }
 
     private Vector2d getIntersectionPoint(Vector2d p1, Vector2d g1, Vector2d p2, Vector2d g2) {
@@ -513,7 +522,7 @@ public class BasicAI implements AI {
 
 
     private void setPlayerGoalPositionsNotInPossession() {
-        // intercept the ball
+        // CHANGE SO THAT ONLY THE CLOSEST PLAYER TO THEIR INTERCEPTION POINT INTERCEPTS THE BALL
 
         for (Player p : players) {
             int playerID = p.getPlayerID();
