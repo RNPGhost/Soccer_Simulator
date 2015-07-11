@@ -280,8 +280,7 @@ public class BasicAI implements AI {
         passVector.sub(pitch.getBallPosition());
 
         Vector2d passLeadComponent = player.getVelocity();
-        passLeadComponent.normalize();
-        passLeadComponent.scale(findBallTime(passVector.length(),passVector.length()));
+        passLeadComponent.scale(findBallTime(passVector.length(), passVector.length()));
 
         passVector.add(passLeadComponent);
 
