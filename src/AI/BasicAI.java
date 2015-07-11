@@ -260,19 +260,22 @@ public class BasicAI implements AI {
                 || player instanceof Goalkeeper) { return false; }
 
         Vector2d goal = new Vector2d(leftSideOfPitch ? Pitch.width/2 : -Pitch.width/2, 0);
-        team.setPlayerGoalPosition(player.getPlayerID(),goal);
-        return true;
+
+        double angle = Math.PI/4; // 45 degrees
+        Vector2d path = new Vector2d(goal);
+        path.sub(player.getPosition());
+        path.normalize();
+        path.scale(50);
+
+        if (!checkConeForEnemies(angle, player.getPosition(), path)) {
+            team.setPlayerGoalPosition(player.getPlayerID(), goal);
+            return true;
+        }
+
+        return false;
     }
 
     private boolean makePass(Player player) {
-        // always make the pass
-        // eventually, will check to make sure pass cannot be intercepted
-
-        pass(player);
-        return true;
-    }
-
-    private void pass(Player player) {
         // estimate pass time by calculating time for ball to reach player
         // pass where the player will be if their velocity does not change
 
@@ -284,7 +287,29 @@ public class BasicAI implements AI {
 
         passVector.add(passLeadComponent);
 
-        team.kickBall(passVector);
+        double angle = Math.PI / 18; // 10 degrees
+
+        if (!checkConeForEnemies(angle, pitch.getBallPosition(), passVector)) {
+            team.kickBall(passVector);
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean checkConeForEnemies(double angle, Vector2d conePoint, Vector2d centreLine) {
+        List<Player> opponents = pitch.getCopyOfPlayers(getOpponentID());
+
+        for (Player o: opponents) {
+            Vector2d direction = o.getPosition();
+            direction.sub(conePoint);
+            if (direction.length() <= centreLine.length()
+                    && centreLine.angle(direction) <= angle) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void spreadOut(Player player) {

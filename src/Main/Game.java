@@ -32,7 +32,7 @@ public class Game {
         Ball ball = new Ball(new Vector2d(0,0),new Vector2d(0,0));
 
         // create a pitch to play on
-        pitch = new Pitch(mouseInputAI,basicAI2,ball);
+        pitch = new Pitch(basicAI1,basicAI2,ball);
 
         // give the pitch and ball to the drawing frame
         pdFrame.initialise(pitch,ball);
