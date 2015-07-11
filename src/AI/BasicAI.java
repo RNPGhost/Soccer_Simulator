@@ -127,7 +127,7 @@ public class BasicAI implements AI {
 
         double lowerBound = 0;
         // maximum possible distance the ball can travel with a = -v/3 is 3 * ball velocity
-        double upperBound = 3 * pitch.getBallVelocity().length();
+        double upperBound = 3 * pitch.getBallVelocity().length() + 1;
         // we test at distance of player from ball to ensure we get lowest x possible
         Vector2d ballToPlayer = team.getPlayerPosition(playerID);
         ballToPlayer.sub(pitch.getBallPosition());
@@ -136,7 +136,7 @@ public class BasicAI implements AI {
 
         while (Math.abs(newX - oldX) > 1) {
             oldX = newX;
-            Double ballTime = findBallTime(oldX);
+            Double ballTime = findBallTime(pitch.getBallVelocity().length(), oldX);
             Double playerTime = findPlayerTime(oldX, playerID);
             if (playerTime >= ballTime) {
                 lowerBound = oldX;
@@ -155,11 +155,11 @@ public class BasicAI implements AI {
         return interPoint;
     }
 
-    private double findBallTime(double x) {
+    private double findBallTime(double u, double x) {
         // time taken for ball to travel x distance is t = -3ln(1 - x/3u)
         // where u is the initial velocity of the ball
 
-        return -3 * Math.log(1 - (x / (3 * pitch.getBallVelocity().length())));
+        return -3 * Math.log(1 - (x / (3 * u)));
     }
 
     private double findPlayerTime(double x, int playerID) {
@@ -205,11 +205,10 @@ public class BasicAI implements AI {
     }
 
     private void setPlayerGoalPositionsBallPossessor(Player player) {
-        tryPassing(player);
-    }
-
-    private void tryPassing(Player player) {
-        // player tries to pass the ball to anyone on his team who is closer to the enemy goal
+        // prioritises passing forward
+        // then aggressive movement
+        // then other movement
+        // then passing backward
 
         List<Player> orderedPlayers = new ArrayList<Player>(players);
         orderedPlayers = sortByClosestToEnemyGoal(orderedPlayers);
@@ -218,12 +217,14 @@ public class BasicAI implements AI {
         List<Player> closerPlayers = orderedPlayers.subList(0,playerIndex);
         List<Player> furtherPlayers = orderedPlayers.subList(playerIndex + 1, orderedPlayers.size());
 
-        if (!tryToPass(player, closerPlayers)) {
+        if (!tryToPass(closerPlayers)) {
             if (!tryToRunAtGoal(player)) {
-                tryToPass(player, furtherPlayers);
+                tryToPass(furtherPlayers);
             }
         }
     }
+
+
 
     private List<Player> sortByClosestToEnemyGoal(List<Player> teamMates) {
         final Vector2d goal = new Vector2d(leftSideOfPitch ? Pitch.width/2 : -Pitch.width/2, 0);
@@ -239,13 +240,13 @@ public class BasicAI implements AI {
         return teamMates;
     }
 
-    private boolean tryToPass(Player player, List<Player> receivers) {
+    private boolean tryToPass(List<Player> receivers) {
         if (receivers.size() > 2) {
             System.out.println(receivers.size() + " receivers");
         }
 
         for (Player p: receivers) {
-            if (makePass(player, p)) {
+            if (makePass(p)) {
                 return true;
             }
         }
@@ -263,21 +264,28 @@ public class BasicAI implements AI {
         return true;
     }
 
-    private boolean makePass(Player a, Player b) {
+    private boolean makePass(Player player) {
         // always make the pass
         // eventually, will check to make sure pass cannot be intercepted
 
-        pass(a,b);
+        pass(player);
         return true;
     }
 
-    private void pass(Player a, Player b) {
-        // NOTE TO SELF: must create better passing algorithm
-        Vector2d kickDirection = b.getPosition();
-        kickDirection.sub(a.getPosition());
-        kickDirection.add(b.getVelocity());
+    private void pass(Player player) {
+        // estimate pass time by calculating time for ball to reach player
+        // pass where the player will be if their velocity does not change
 
-        team.kickBall(kickDirection);
+        Vector2d passVector = player.getPosition();
+        passVector.sub(pitch.getBallPosition());
+
+        Vector2d passLeadComponent = player.getVelocity();
+        passLeadComponent.normalize();
+        passLeadComponent.scale(findBallTime(passVector.length(),passVector.length()));
+
+        passVector.add(passLeadComponent);
+
+        team.kickBall(passVector);
     }
 
     private void spreadOut(Player player) {
