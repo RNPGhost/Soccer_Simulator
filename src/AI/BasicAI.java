@@ -217,14 +217,16 @@ public class BasicAI implements AI {
         List<Player> closerPlayers = orderedPlayers.subList(0,playerIndex);
         List<Player> furtherPlayers = orderedPlayers.subList(playerIndex + 1, orderedPlayers.size());
 
-        if (!tryToPass(closerPlayers)) {
-            if (!tryToRunAtGoal(player)) {
-                tryToPass(furtherPlayers);
+        if (!tryToShoot(player, true)) {
+            if (!tryToPass(closerPlayers)) {
+                if (!tryToRunAtGoal(player)) {
+                    if (!tryToPass(furtherPlayers)) {
+                        tryToShoot(player, false);
+                    }
+                }
             }
         }
     }
-
-
 
     private List<Player> sortByClosestToEnemyGoal(List<Player> teamMates) {
         final Vector2d goal = new Vector2d(leftSideOfPitch ? Pitch.width/2 : -Pitch.width/2, 0);
@@ -238,6 +240,65 @@ public class BasicAI implements AI {
         });
 
         return teamMates;
+    }
+
+    private boolean tryToShoot(Player player, boolean waitUntilClose) {
+        double goalXPos = (leftSideOfPitch ? Pitch.width/2 : -Pitch.width/2);
+
+        Vector2d distanceToGoal = new Vector2d(goalXPos, 0);
+        distanceToGoal.sub(player.getPosition());
+
+        if (waitUntilClose && distanceToGoal.length() > 300) { return false; }
+
+        Vector2d topPost = new Vector2d(goalXPos, Pitch.goalWidth/2);
+        Vector2d bottomPost = new Vector2d(goalXPos, -Pitch.goalWidth/2);
+
+        Vector2d enemyGoalKeeperPosition = pitch.getPlayerPosition(
+                getOpponentID(), pitch.getGoalKeeperID(getOpponentID()));
+
+        Vector2d playerToGoalKeeper = new Vector2d(enemyGoalKeeperPosition);
+        playerToGoalKeeper.sub(player.getPosition());
+
+        Vector2d playerToTopPost = new Vector2d(topPost);
+        playerToTopPost.add(new Vector2d(0,-1));
+        playerToTopPost.sub(player.getPosition());
+
+        Vector2d playerToBottomPost = new Vector2d(bottomPost);
+        playerToBottomPost.add(new Vector2d(0,1));
+        playerToBottomPost.sub(player.getPosition());
+
+        double angle = Math.PI/36; // 5 degrees
+
+        if (playerToGoalKeeper.angle(playerToTopPost) < playerToGoalKeeper.angle(playerToBottomPost)) {
+            if (!tryShot(angle, player.getPosition(), playerToTopPost)) {
+                if (!tryShot(angle, player.getPosition(), playerToBottomPost)) {
+                    if (!waitUntilClose) {
+                        team.kickBall(playerToTopPost);
+                    } else {
+                        return false;
+                    }
+                }
+            }
+        } else {
+            if (!tryShot(angle, player.getPosition(), playerToBottomPost)) {
+                if (!tryShot(angle, player.getPosition(), playerToTopPost)) {
+                    if (!waitUntilClose) {
+                        team.kickBall(playerToBottomPost);
+                    } else {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private boolean tryShot(double angle, Vector2d playerPosition, Vector2d shotDirection) {
+        if (checkConeForEnemies(angle, playerPosition, shotDirection)) { return false; }
+        team.kickBall(shotDirection);
+        return true;
+
     }
 
     private boolean tryToPass(List<Player> receivers) {
@@ -261,7 +322,7 @@ public class BasicAI implements AI {
 
         Vector2d goal = new Vector2d(leftSideOfPitch ? Pitch.width/2 : -Pitch.width/2, 0);
 
-        double angle = Math.PI/4; // 45 degrees
+        double angle = Math.PI/8;
         Vector2d path = new Vector2d(goal);
         path.sub(player.getPosition());
         path.normalize();
@@ -287,7 +348,7 @@ public class BasicAI implements AI {
 
         passVector.add(passLeadComponent);
 
-        double angle = Math.PI / 18; // 10 degrees
+        double angle = Math.PI / 4; // 10 degrees
 
         if (!checkConeForEnemies(angle, pitch.getBallPosition(), passVector)) {
             team.kickBall(passVector);
@@ -316,6 +377,7 @@ public class BasicAI implements AI {
         // send player to the centre of the triangle of the 3 closest defenders
 
         List<Player> opponents = pitch.getCopyOfPlayers(getOpponentID());
+        opponents.add(0, players.get(team.getGoalKeeperID()));
 
         if (opponents.size() < 3) { return; }
 
