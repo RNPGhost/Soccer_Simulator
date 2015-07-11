@@ -2,7 +2,6 @@ package Main;
 
 import AI.AI;
 import AI.BasicAI;
-import AI.MouseInputAI;
 import Graphics.PitchDrawingFrame;
 import Graphics.Tools;
 
@@ -23,8 +22,6 @@ public class Game {
 
         // initialise the canvas
         Tools.initialiseCanvas(pdFrame);
-
-        AI mouseInputAI = new MouseInputAI();
         AI basicAI1 = new BasicAI();
         AI basicAI2 = new BasicAI();
 

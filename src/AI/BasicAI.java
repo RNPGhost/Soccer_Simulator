@@ -296,16 +296,15 @@ public class BasicAI implements AI {
 
     private boolean tryShot(double angle, Vector2d playerPosition, Vector2d shotDirection) {
         if (checkConeForEnemies(angle, playerPosition, shotDirection)) { return false; }
-        team.kickBall(shotDirection);
+        Vector2d shot = new Vector2d(shotDirection);
+        shot.normalize();
+        shot.scale(pitch.getBallMaxVelocity());
+        team.kickBall(shot);
         return true;
 
     }
 
     private boolean tryToPass(List<Player> receivers) {
-        if (receivers.size() > 2) {
-            System.out.println(receivers.size() + " receivers");
-        }
-
         for (Player p: receivers) {
             if (makePass(p)) {
                 return true;
@@ -378,6 +377,12 @@ public class BasicAI implements AI {
 
         List<Player> opponents = pitch.getCopyOfPlayers(getOpponentID());
         opponents.add(0, players.get(team.getGoalKeeperID()));
+        opponents.add(new Player(11, new Vector2d(0,Pitch.height/2),new Vector2d(0,0),new Vector2d(0,0)));
+        opponents.add(new Player(12, new Vector2d(0,-Pitch.height/2),new Vector2d(0,0),new Vector2d(0,0)));
+        opponents.add(new Player(13, new Vector2d(Pitch.width/2,Pitch.height/2),new Vector2d(0,0),new Vector2d(0,0)));
+        opponents.add(new Player(14, new Vector2d(Pitch.width/2,-Pitch.height/2),new Vector2d(0,0),new Vector2d(0,0)));
+        opponents.add(new Player(15, new Vector2d(-Pitch.width/2,Pitch.height/2),new Vector2d(0,0),new Vector2d(0,0)));
+        opponents.add(new Player(16, new Vector2d(-Pitch.width/2,-Pitch.height/2),new Vector2d(0,0),new Vector2d(0,0)));
 
         if (opponents.size() < 3) { return; }
 
@@ -452,7 +457,7 @@ public class BasicAI implements AI {
         List<Player> newPlayers = new ArrayList<Player>();
         for (Player player: players) {
             if (!(player instanceof Goalkeeper)) {
-                newPlayers.add(player.getPlayerID(),player);
+                newPlayers.add(player);
             }
         }
 

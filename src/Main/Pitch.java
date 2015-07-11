@@ -301,21 +301,33 @@ public class Pitch {
     private List<Player> createTeam1KickOffPlayers(int teamID) {
         List<Player> players = new ArrayList<Player>();
 
+        // create goal keeper
+        players.add(createGoalKeeper(2,new Vector2d(-Pitch.width/2,0)));
+
         // if team1 is kicking
         if (team1.getTeamID() == teamID) {
             // create kick taker
-            players.add(createStationaryPlayer(0,new Vector2d(0,0)));
+            players.add(createStationaryPlayer(1,new Vector2d(0,0)));
             // create kick receiver
-            players.add(createStationaryPlayer(1,new Vector2d(0,20)));
+            players.add(createStationaryPlayer(2,new Vector2d(0,20)));
 
         // if team2 is kicking
         } else {
             // create 2 stationary players
-            players.add(createStationaryPlayer(0,new Vector2d(-100,-20)));
-            players.add(createStationaryPlayer(1,new Vector2d(-100,20)));
+            players.add(createStationaryPlayer(1,new Vector2d(-100,-20)));
+            players.add(createStationaryPlayer(2,new Vector2d(-100,20)));
         }
-        // create goal keeper
-        players.add(createGoalKeeper(2,new Vector2d(-Pitch.width/2,0)));
+        // create other players
+        players.add(createStationaryPlayer(3,new Vector2d(-Pitch.width/6,Pitch.height/6)));
+        players.add(createStationaryPlayer(4,new Vector2d(-Pitch.width/6,-Pitch.height/6)));
+        players.add(createStationaryPlayer(5,new Vector2d(-Pitch.width/6,Pitch.height/3)));
+        players.add(createStationaryPlayer(6,new Vector2d(-Pitch.width/6,-Pitch.height/3)));
+        players.add(createStationaryPlayer(7,new Vector2d(-Pitch.width/3,Pitch.height/6)));
+        players.add(createStationaryPlayer(8,new Vector2d(-Pitch.width/3,-Pitch.height/6)));
+        players.add(createStationaryPlayer(9,new Vector2d(-Pitch.width/3,Pitch.height/3)));
+        players.add(createStationaryPlayer(10,new Vector2d(-Pitch.width/3,-Pitch.height/3)));
+
+
 
         return players;
     }
@@ -323,21 +335,31 @@ public class Pitch {
     private List<Player> createTeam2KickOffPlayers(int teamID) {
         List<Player> players = new ArrayList<Player>();
 
+        // create goal keeper
+        players.add(createGoalKeeper(0,new Vector2d(Pitch.width/2,0)));
+
         // if team2 is kicking
         if (team2.getTeamID() == teamID) {
             // create kick taker
-            players.add(createStationaryPlayer(0,new Vector2d(0,0)));
+            players.add(createStationaryPlayer(1,new Vector2d(0,0)));
             // create kick receiver
-            players.add(createStationaryPlayer(1,new Vector2d(0,20)));
+            players.add(createStationaryPlayer(2,new Vector2d(0,20)));
 
             // if team1 is kicking
         } else {
             // create 2 stationary players
-            players.add(createStationaryPlayer(0,new Vector2d(100,-20)));
-            players.add(createStationaryPlayer(1,new Vector2d(100,20)));
+            players.add(createStationaryPlayer(1,new Vector2d(100,-20)));
+            players.add(createStationaryPlayer(2,new Vector2d(100,20)));
         }
-        // create goal keeper
-        players.add(createGoalKeeper(2,new Vector2d(Pitch.width/2,0)));
+        // create other players
+        players.add(createStationaryPlayer(3,new Vector2d(Pitch.width/6,Pitch.height/6)));
+        players.add(createStationaryPlayer(4,new Vector2d(Pitch.width/6,-Pitch.height/6)));
+        players.add(createStationaryPlayer(5,new Vector2d(Pitch.width/6,Pitch.height/3)));
+        players.add(createStationaryPlayer(6,new Vector2d(Pitch.width/6,-Pitch.height/3)));
+        players.add(createStationaryPlayer(7,new Vector2d(Pitch.width/3,Pitch.height/6)));
+        players.add(createStationaryPlayer(8,new Vector2d(Pitch.width/3,-Pitch.height/6)));
+        players.add(createStationaryPlayer(9,new Vector2d(Pitch.width/3,Pitch.height/3)));
+        players.add(createStationaryPlayer(10,new Vector2d(Pitch.width/3,-Pitch.height/3)));
 
         return players;
     }
