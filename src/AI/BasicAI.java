@@ -218,8 +218,8 @@ public class BasicAI implements AI {
         List<Player> furtherPlayers = orderedPlayers.subList(playerIndex + 1, orderedPlayers.size());
 
         if (!tryToShoot(player, true)) {
-            if (!tryToPass(closerPlayers)) {
-                if (!tryToRunAtGoal(player)) {
+            if (!tryToRunAtGoal(player)) {
+                if (!tryToPass(closerPlayers)) {
                     if (!tryToPass(furtherPlayers)) {
                         tryToShoot(player, false);
                     }
@@ -320,14 +320,10 @@ public class BasicAI implements AI {
                 || player instanceof Goalkeeper) { return false; }
 
         Vector2d goal = new Vector2d(leftSideOfPitch ? Pitch.width/2 : -Pitch.width/2, 0);
+        Vector2d futurePosition = player.getPosition();
+        futurePosition.add(player.getVelocity());
 
-        double angle = Math.PI/8;
-        Vector2d path = new Vector2d(goal);
-        path.sub(player.getPosition());
-        path.normalize();
-        path.scale(50);
-
-        if (!checkConeForEnemies(angle, player.getPosition(), path)) {
+        if (!checkCircleForFutureEnemies(futurePosition, 100, 1)) {
             team.setPlayerGoalPosition(player.getPlayerID(), goal);
             return true;
         }
@@ -342,20 +338,27 @@ public class BasicAI implements AI {
         Vector2d passVector = player.getPosition();
         passVector.sub(pitch.getBallPosition());
 
-        double passSpeed = 5 * passVector.length();
+        double passSpeed = 4 * passVector.length();
         if (passSpeed > pitch.getBallMaxVelocity()) { passSpeed = pitch.getBallMaxVelocity(); }
 
+        double ballTime = findBallTime(passSpeed, passVector.length());
+
         Vector2d passLeadComponent = player.getVelocity();
-        passLeadComponent.scale(findBallTime(passSpeed, passVector.length()));
+        passLeadComponent.scale(ballTime);
 
         passVector.add(passLeadComponent);
 
-        double angle = Math.PI / 32;
+        Vector2d passPoint = passLeadComponent;
+        passPoint.add(player.getPosition());
 
-        if (!checkConeForEnemies(angle, pitch.getBallPosition(), passVector)) {
+        double angle = Math.PI / 20;
+
+        if (!checkConeForEnemies(angle, pitch.getBallPosition(), passVector)
+                && !checkCircleForFutureEnemies(passPoint,100,ballTime)) {
             passVector.normalize();
             passVector.scale(passSpeed);
             team.kickBall(passVector);
+            System.out.println(pitch.getBallPossessorPlayerID() + " passed to " + player.getPlayerID());
             return true;
         }
 
@@ -370,6 +373,22 @@ public class BasicAI implements AI {
             direction.sub(conePoint);
             if (direction.length() <= centreLine.length()
                     && centreLine.angle(direction) <= angle) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean checkCircleForFutureEnemies(Vector2d centre, double radius, double time) {
+        List<Player> opponents = pitch.getCopyOfPlayers(getOpponentID());
+
+        for (Player o: opponents) {
+            Vector2d direction = o.getVelocity();
+            direction.scale(time);
+            direction.add(o.getPosition());
+            direction.sub(centre);
+            if (direction.length() <= radius) {
                 return true;
             }
         }
@@ -440,7 +459,9 @@ public class BasicAI implements AI {
         List<Player> opponents = pitch.getCopyOfPlayers(opponentID);
         List<Player> playersCopy = new ArrayList<Player>(defenders);
 
-        playersCopy.remove(team.getGoalKeeperID());
+        if (playersCopy.get(team.getGoalKeeperID()) instanceof Goalkeeper) {
+            playersCopy.remove(team.getGoalKeeperID());
+        }
         opponents.remove(pitch.getGoalKeeperID(getOpponentID()));
 
         for (Player player: opponents) {
