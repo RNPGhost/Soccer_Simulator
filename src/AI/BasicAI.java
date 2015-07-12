@@ -158,7 +158,7 @@ public class BasicAI implements AI {
     private double findBallTime(double u, double x) {
         // time taken for ball to travel x distance is t = -3ln(1 - x/3u)
         // where u is the initial velocity of the ball
-
+        if (x > 3 * u) { return Double.POSITIVE_INFINITY; }
         return -3 * Math.log(1 - (x / (3 * u)));
     }
 
@@ -198,8 +198,8 @@ public class BasicAI implements AI {
         List<Player> newPlayers = new ArrayList<Player>(players);
         Player ballPossessor = newPlayers.get(pitch.getBallPossessorPlayerID());
         setPlayerGoalPositionsBallPossessor(ballPossessor);
-        newPlayers.remove(ballPossessor);
         newPlayers.remove(team.getGoalKeeperID());
+        newPlayers.remove(ballPossessor);
 
         spreadOut(newPlayers);
     }
@@ -213,16 +213,17 @@ public class BasicAI implements AI {
         List<Player> orderedPlayers = new ArrayList<Player>(players);
         orderedPlayers = sortByClosestToEnemyGoal(orderedPlayers);
 
-        int playerIndex = orderedPlayers.indexOf(player);
-        List<Player> closerPlayers = orderedPlayers.subList(0,playerIndex);
-        List<Player> furtherPlayers = orderedPlayers.subList(playerIndex + 1, orderedPlayers.size());
+        for (Player p: orderedPlayers) {
+            if (p.getPlayerID() == player.getPlayerID()) {
+                orderedPlayers.remove(p);
+                break;
+            }
+        }
 
-        if (!tryToShoot(player, true)) {
+        if (!tryToShoot(player)) {
             if (!tryToRunAtGoal(player)) {
-                if (!tryToPass(closerPlayers)) {
-                    if (!tryToPass(furtherPlayers)) {
-                        tryToShoot(player, false);
-                    }
+                if (!tryToPass(orderedPlayers)) {
+                    passToClosest(player);
                 }
             }
         }
@@ -242,13 +243,13 @@ public class BasicAI implements AI {
         return teamMates;
     }
 
-    private boolean tryToShoot(Player player, boolean waitUntilClose) {
+    private boolean tryToShoot(Player player) {
         double goalXPos = (leftSideOfPitch ? Pitch.width/2 : -Pitch.width/2);
 
         Vector2d distanceToGoal = new Vector2d(goalXPos, 0);
         distanceToGoal.sub(player.getPosition());
 
-        if (waitUntilClose && distanceToGoal.length() > 200) { return false; }
+        if (distanceToGoal.length() > 300) { return false; }
 
         Vector2d topPost = new Vector2d(goalXPos, Pitch.goalWidth/2);
         Vector2d bottomPost = new Vector2d(goalXPos, -Pitch.goalWidth/2);
@@ -272,21 +273,13 @@ public class BasicAI implements AI {
         if (playerToGoalKeeper.angle(playerToTopPost) > playerToGoalKeeper.angle(playerToBottomPost)) {
             if (!tryShot(angle, player.getPosition(), playerToTopPost)) {
                 if (!tryShot(angle, player.getPosition(), playerToBottomPost)) {
-                    if (!waitUntilClose) {
-                        team.kickBall(playerToTopPost);
-                    } else {
-                        return false;
-                    }
+                    return false;
                 }
             }
         } else {
             if (!tryShot(angle, player.getPosition(), playerToBottomPost)) {
                 if (!tryShot(angle, player.getPosition(), playerToTopPost)) {
-                    if (!waitUntilClose) {
-                        team.kickBall(playerToBottomPost);
-                    } else {
-                        return false;
-                    }
+                    return false;
                 }
             }
         }
@@ -306,12 +299,14 @@ public class BasicAI implements AI {
 
     private boolean tryToPass(List<Player> receivers) {
         for (Player p: receivers) {
-            if (makePass(p)) {
+            if (makePass(p, true)) {
                 return true;
             }
         }
         return false;
     }
+
+
 
     private boolean tryToRunAtGoal(Player player) {
         // if not a stationary player, run at the enemy goal
@@ -323,7 +318,7 @@ public class BasicAI implements AI {
         Vector2d futurePosition = player.getPosition();
         futurePosition.add(player.getVelocity());
 
-        if (!checkCircleForFutureEnemies(futurePosition, 100, 1)) {
+        if (!checkCircleForFutureEnemies(futurePosition, 20, 1)) {
             team.setPlayerGoalPosition(player.getPlayerID(), goal);
             return true;
         }
@@ -331,7 +326,7 @@ public class BasicAI implements AI {
         return false;
     }
 
-    private boolean makePass(Player player) {
+    private boolean makePass(Player player, boolean doChecks) {
         // estimate pass time by calculating time for ball to reach player
         // pass where the player will be if their velocity does not change
 
@@ -339,9 +334,12 @@ public class BasicAI implements AI {
         passVector.sub(pitch.getBallPosition());
 
         double passSpeed = 4 * passVector.length();
+
         if (passSpeed > pitch.getBallMaxVelocity()) { passSpeed = pitch.getBallMaxVelocity(); }
 
         double ballTime = findBallTime(passSpeed, passVector.length());
+        // don't pass if no pass would reach the player's current position
+        if (ballTime == Double.POSITIVE_INFINITY) { return false; }
 
         Vector2d passLeadComponent = player.getVelocity();
         passLeadComponent.scale(ballTime);
@@ -353,16 +351,25 @@ public class BasicAI implements AI {
 
         double angle = Math.PI / 20;
 
-        if (!checkConeForEnemies(angle, pitch.getBallPosition(), passVector)
-                && !checkCircleForFutureEnemies(passPoint,100,ballTime)) {
+        if (!doChecks
+                || (!checkConeForEnemies(angle, pitch.getBallPosition(), passVector)
+                && !checkCircleForFutureEnemies(passPoint, 80, ballTime))) {
             passVector.normalize();
             passVector.scale(passSpeed);
             team.kickBall(passVector);
-            System.out.println(pitch.getBallPossessorPlayerID() + " passed to " + player.getPlayerID());
             return true;
         }
 
         return false;
+    }
+
+    private void passToClosest(Player player) {
+        List<Player> playerList = new ArrayList<Player>(players);
+        playerList.remove(player);
+
+        Player closest = findNearest(playerList, player.getPosition());
+
+        makePass(closest, false);
     }
 
     private boolean checkConeForEnemies(double angle, Vector2d conePoint, Vector2d centreLine) {
@@ -463,6 +470,18 @@ public class BasicAI implements AI {
             playersCopy.remove(team.getGoalKeeperID());
         }
         opponents.remove(pitch.getGoalKeeperID(getOpponentID()));
+
+        Vector2d ballPositionPlusVelocity = new Vector2d(pitch.getBallPosition());
+        ballPositionPlusVelocity.add(pitch.getBallVelocity());
+        final Vector2d goal = new Vector2d(ballPositionPlusVelocity);
+
+        opponents.sort(new Comparator<Player>() {
+            public int compare(Player a, Player b) {
+                Vector2d aToGoal = new Vector2d(goal); aToGoal.sub(a.getPosition()); double distA = aToGoal.length();
+                Vector2d bToGoal = new Vector2d(goal); bToGoal.sub(b.getPosition()); double distB = bToGoal.length();
+                return Double.compare(distA, distB);
+            }
+        });
 
         for (Player player: opponents) {
             mark(playersCopy,player);
